@@ -1,0 +1,1093 @@
+#+TITLE: Bluebeam MCP Project
+#+AUTHOR: Rory Hamaoka
+#+EMAIL: rhamoaka@lbl.go
+#+DESCRIPTION: Notes for my project
+#+OPTIONS: toc:nil num:nil
+
+* Table of Contents :toc:
+- [[#project-goal][Project Goal]]
+- [[#plain-language-steps][Plain Language Steps]]
+- [[#design-decisions-needed][Design Decisions Needed]]
+  - [[#design-decision-1-programming-language][Design Decision 1: Programming Language]]
+  - [[#design-decision-2-mcp-transport-protocol][Design Decision 2: MCP Transport Protocol]]
+  - [[#design-decision-3-hosting-and-deployment][Design Decision 3: Hosting and Deployment]]
+  - [[#design-decision-4-authentication-and-secrets-management][Design Decision 4: Authentication and Secrets Management]]
+- [[#information-needed][Information Needed]]
+- [[#detailed-work-breakdown][Detailed Work Breakdown]]
+- [[#phase-1-local-development-environment-setup-laptop][Phase 1: Local Development Environment Setup (Laptop)]]
+  - [[#install-nodejs-and-git-on-the-local-machine][Install Node.js and Git on the local machine.]]
+  - [[#create-a-new-project-directory-and-initialize-it-with-npm][Create a new project directory and initialize it with npm.]]
+  - [[#install-required-nodejs-dependencies-express-http-client-mcp-sdk-dotenv][Install required Node.js dependencies (Express, HTTP client, MCP SDK, dotenv).]]
+  - [[#initialize-a-local-git-repository-for-the-project][Initialize a local Git repository for the project.]]
+- [[#phase-2-bluebeam-authentication-logic-laptop][Phase 2: Bluebeam Authentication Logic (Laptop)]]
+  - [[#create-a-hidden-env-file-to-securely-store-the-bluebeam-client-id-and-client-secret][Create a hidden .env file to securely store the Bluebeam Client ID and Client Secret.]]
+  - [[#write-a-temporary-script-to-generate-the-initial-oauth-20-authorization-url][Write a temporary script to generate the initial OAuth 2.0 authorization URL.]]
+  - [[#navigate-to-the-generated-url-and-log-in-using-the-shared-bb-devlblgov-account-to-retrieve-the-authorization-code][Navigate to the generated URL and log in using the shared bb-dev@lbl.gov account to retrieve the authorization code.]]
+  - [[#write-a-function-to-exchange-the-authorization-code-for-an-access-token-and-a-refresh-token][Write a function to exchange the authorization code for an Access Token and a Refresh Token.]]
+  - [[#configure-the-application-to-save-the-resulting-tokens-into-a-local-json-file][Configure the application to save the resulting tokens into a local JSON file.]]
+  - [[#implement-the-token-refresh-logic-to-automatically-fetch-and-save-a-new-access-token-whenever-the-current-one-expires][Implement the token refresh logic to automatically fetch and save a new Access Token whenever the current one expires.]]
+- [[#phase-3-core-server-logic-and-mcp-tool-definition-laptop][Phase 3: Core Server Logic and MCP Tool Definition (Laptop)]]
+  - [[#configure-the-express-framework-to-accept-incoming-http-post-requests][Configure the Express framework to accept incoming HTTP POST requests.]]
+  - [[#implement-the-server-sent-events-sse-connection-logic-required-by-the-model-context-protocol][Implement the Server-Sent Events (SSE) connection logic required by the Model Context Protocol.]]
+  - [[#define-the-mcp-tool-to-query-and-list-available-bluebeam-studio-sessions][Define the MCP tool to query and list available Bluebeam Studio Sessions.]]
+  - [[#define-the-mcp-tool-to-retrieve-the-document-list-for-a-specified-session-id][Define the MCP tool to retrieve the document list for a specified session ID.]]
+  - [[#define-the-mcp-tool-to-extract-markups-and-comments-from-a-specified-document-id-using-the-active-access-token][Define the MCP tool to extract markups and comments from a specified document ID using the active access token.]]
+- [[#phase-4-local-and-end-to-end-testing-laptop][Phase 4: Local and End-to-End Testing (Laptop)]]
+  - [[#use-a-local-api-developer-tool-to-send-mock-requests-to-the-express-server-to-verify-bluebeam-data-retrieval-and-token-refreshing][Use a local API developer tool to send mock requests to the Express server to verify Bluebeam data retrieval and token refreshing.]]
+  - [[#run-a-temporary-tunneling-service-such-as-ngrok-on-the-laptop-to-expose-the-local-server-to-a-public-https-address][Run a temporary tunneling service (such as Ngrok) on the laptop to expose the local server to a public HTTPS address.]]
+  - [[#update-the-atlassian-forge-project-configuration-to-point-the-rovo-agent-to-this-temporary-public-address][Update the Atlassian Forge project configuration to point the Rovo Agent to this temporary public address.]]
+  - [[#test-the-full-end-to-end-integration-by-asking-the-atlassian-rovo-agent-to-retrieve-comments-from-the-workspace][Test the full end-to-end integration by asking the Atlassian Rovo Agent to retrieve comments from the workspace.]]
+- [[#phase-5-permanent-network-routing-setup-raspberry-pi-5][Phase 5: Permanent Network Routing Setup (Raspberry Pi 5)]]
+  - [[#create-a-minimal-hello-world-express-application-on-the-raspberry-pi-to-test-routing][Create a minimal "Hello World" Express application on the Raspberry Pi to test routing.]]
+  - [[#configure-the-cloudflare-tunnel-to-route-the-chosen-subdomain-to-the-nginx-web-server][Configure the Cloudflare Tunnel to route the chosen subdomain to the Nginx web server.]]
+  - [[#update-the-nginx-configuration-to-forward-traffic-from-the-subdomain-to-the-local-port-of-the-test-application][Update the Nginx configuration to forward traffic from the subdomain to the local port of the test application.]]
+  - [[#modify-the-nginx-configuration-for-this-specific-route-to-disable-proxy-buffering-and-remove-read-timeouts-to-support-continuous-sse-streams][Modify the Nginx configuration for this specific route to disable proxy buffering and remove read timeouts to support continuous SSE streams.]]
+  - [[#access-the-subdomain-from-an-external-network-to-verify-traffic-correctly-reaches-the-test-application][Access the subdomain from an external network to verify traffic correctly reaches the test application.]]
+- [[#phase-6-deployment-via-github-laptop-to-raspberry-pi][Phase 6: Deployment via GitHub (Laptop to Raspberry Pi)]]
+  - [[#add-the-env-file-and-the-json-token-file-to-the-gitignore-configuration-on-the-laptop][Add the .env file and the JSON token file to the .gitignore configuration on the laptop.]]
+  - [[#commit-the-completed-codebase-and-push-it-to-a-private-github-repository][Commit the completed codebase and push it to a private GitHub repository.]]
+  - [[#log-into-the-raspberry-pi-and-clone-the-private-repository-from-github][Log into the Raspberry Pi and clone the private repository from GitHub.]]
+  - [[#run-the-npm-install-command-inside-the-raspberry-pi-project-directory-to-download-the-dependencies][Run the npm install command inside the Raspberry Pi project directory to download the dependencies.]]
+  - [[#securely-transfer-the-env-file-and-the-active-json-token-file-directly-from-the-laptop-to-the-raspberry-pi-over-the-local-network][Securely transfer the .env file and the active JSON token file directly from the laptop to the Raspberry Pi over the local network.]]
+- [[#phase-7-production-launch-and-final-testing-raspberry-pi][Phase 7: Production Launch and Final Testing (Raspberry Pi)]]
+  - [[#install-the-pm2-process-manager-globally-on-the-raspberry-pi][Install the PM2 process manager globally on the Raspberry Pi.]]
+  - [[#start-the-nodejs-application-using-pm2-to-ensure-it-runs-continuously-in-the-background][Start the Node.js application using PM2 to ensure it runs continuously in the background.]]
+  - [[#replace-the-temporary-tunneling-address-in-the-atlassian-forge-configuration-with-the-permanent-cloudflare-subdomain][Replace the temporary tunneling address in the Atlassian Forge configuration with the permanent Cloudflare subdomain.]]
+  - [[#issue-a-final-natural-language-query-to-the-atlassian-rovo-agent-to-confirm-the-production-server-successfully-extracts-and-streams-bluebeam-comments][Issue a final natural language query to the Atlassian Rovo Agent to confirm the production server successfully extracts and streams Bluebeam comments.]]
+- [[#detailed-work-breakdown-1][Detailed Work Breakdown]]
+- [[#phase-1-local-development-environment-setup-laptop-1][Phase 1: Local Development Environment Setup (Laptop)]]
+  - [[#install-nodejs-and-git-on-the-local-machine-1][Install Node.js and Git on the Local Machine]]
+  - [[#create-a-new-project-directory-and-initialize-it-with-node-package-manager][Create a New Project Directory and Initialize it with Node Package Manager]]
+  - [[#install-required-nodejs-dependencies][Install Required Node.js Dependencies]]
+  - [[#initialize-a-local-git-repository-for-the-project-1][Initialize a Local Git Repository for the Project]]
+- [[#phase-2-bluebeam-authentication-logic-laptop-1][Phase 2: Bluebeam Authentication Logic (Laptop)]]
+  - [[#create-a-hidden-environment-file-to-securely-store-the-bluebeam-client-identifier-and-client-secret][Create a Hidden Environment File to Securely Store the Bluebeam Client Identifier and Client Secret]]
+  - [[#write-a-temporary-script-to-generate-the-initial-open-authorization-20-authorization-uniform-resource-locator][Write a Temporary Script to Generate the Initial Open Authorization 2.0 Authorization Uniform Resource Locator]]
+  - [[#retrieve-the-authorization-code-using-the-shared-account][Retrieve the Authorization Code Using the Shared Account]]
+  - [[#write-a-function-to-exchange-the-authorization-code-for-tokens-and-save-them][Write a Function to Exchange the Authorization Code for Tokens and Save Them]]
+  - [[#implement-the-token-refresh-logic][Implement the Token Refresh Logic]]
+- [[#phase-3-core-server-logic-and-model-context-protocol-tool-definition-laptop][Phase 3: Core Server Logic and Model Context Protocol Tool Definition (Laptop)]]
+  - [[#configure-express-and-implement-the-server-sent-events-connection-logic][Configure Express and Implement the Server-Sent Events Connection Logic]]
+  - [[#define-the-model-context-protocol-tools-for-bluebeam-inside-indexjs][Define the Model Context Protocol Tools for Bluebeam Inside index.js]]
+- [[#phase-4-local-and-end-to-end-testing-laptop-1][Phase 4: Local and End-to-End Testing (Laptop)]]
+  - [[#run-the-server-locally-and-confirm-it-starts-without-errors][Run the Server Locally and Confirm It Starts Without Errors]]
+  - [[#install-ngrok-to-expose-the-local-server-to-the-public-internet][Install Ngrok to Expose the Local Server to the Public Internet]]
+  - [[#start-an-ngrok-tunnel-to-port-3000][Start an Ngrok Tunnel to Port 3000]]
+  - [[#create-a-claude-custom-connector-using-the-ngrok-uniform-resource-locator][Create a Claude Custom Connector Using the Ngrok Uniform Resource Locator]]
+  - [[#test-each-tool-from-within-a-claude-conversation][Test Each Tool from Within a Claude Conversation]]
+  - [[#commit-the-working-code-to-a-remote-git-repository][Commit the Working Code to a Remote Git Repository]]
+- [[#phase-5-raspberry-pi-preparation][Phase 5: Raspberry Pi Preparation]]
+  - [[#flash-the-raspberry-pi-operating-system-onto-the-microsd-card][Flash the Raspberry Pi Operating System Onto the MicroSD Card]]
+  - [[#boot-the-raspberry-pi-and-connect-via-secure-shell][Boot the Raspberry Pi and Connect via Secure Shell]]
+  - [[#update-the-system-and-install-nodejs-and-git-on-the-raspberry-pi][Update the System and Install Node.js and Git on the Raspberry Pi]]
+  - [[#install-process-manager-2-globally-for-persistent-process-management][Install Process Manager 2 Globally for Persistent Process Management]]
+- [[#phase-6-deploy-the-application-to-the-raspberry-pi][Phase 6: Deploy the Application to the Raspberry Pi]]
+  - [[#clone-the-repository-onto-the-raspberry-pi][Clone the Repository Onto the Raspberry Pi]]
+  - [[#transfer-the-environment-file-and-tokens-file-from-your-laptop][Transfer the Environment File and Tokens File from Your Laptop]]
+  - [[#update-the-redirect-uniform-resource-identifier-in-the-pis-environment-file][Update the Redirect Uniform Resource Identifier in the Pi's Environment File]]
+  - [[#start-the-server-with-process-manager-2-and-enable-boot-time-startup][Start the Server with Process Manager 2 and Enable Boot-Time Startup]]
+  - [[#verify-the-server-is-running-and-reachable-on-the-local-network][Verify the Server Is Running and Reachable on the Local Network]]
+- [[#phase-7-expose-the-raspberry-pi-to-the-public-internet-via-nginx-and-hypertext-transfer-protocol-secure][Phase 7: Expose the Raspberry Pi to the Public Internet via Nginx and Hypertext Transfer Protocol Secure]]
+  - [[#configure-a-static-internal-internet-protocol-address-for-the-pi][Configure a Static Internal Internet Protocol Address for the Pi]]
+  - [[#set-up-port-forwarding-on-the-network-router][Set Up Port Forwarding on the Network Router]]
+  - [[#obtain-a-public-domain-name][Obtain a Public Domain Name]]
+  - [[#install-nginx-and-certbot-on-the-pi][Install Nginx and Certbot on the Pi]]
+  - [[#create-an-nginx-site-configuration-for-the-model-context-protocol-server][Create an Nginx Site Configuration for the Model Context Protocol Server]]
+  - [[#obtain-a-hypertext-transfer-protocol-secure-certificate-with-certbot][Obtain a Hypertext Transfer Protocol Secure Certificate with Certbot]]
+  - [[#confirm-the-server-is-reachable-from-the-public-internet][Confirm the Server Is Reachable from the Public Internet]]
+- [[#phase-8-switch-the-claude-custom-connector-to-production][Phase 8: Switch the Claude Custom Connector to Production]]
+  - [[#update-the-claude-custom-connector-uniform-resource-locator][Update the Claude Custom Connector Uniform Resource Locator]]
+  - [[#conduct-final-end-to-end-tests-with-the-shared-account][Conduct Final End-to-End Tests with the Shared Account]]
+  - [[#document-the-setup-for-the-team][Document the Setup for the Team]]
+- [[#phase-9-ongoing-maintenance-considerations][Phase 9: Ongoing Maintenance Considerations]]
+  - [[#monitor-token-health][Monitor Token Health]]
+  - [[#apply-operating-system-and-dependency-updates-periodically][Apply Operating System and Dependency Updates Periodically]]
+  - [[#back-up-the-tokens-file-and-environment-file][Back Up the Tokens File and Environment File]]
+  - [[#set-up-basic-uptime-monitoring][Set Up Basic Uptime Monitoring]]
+  - [[#review-nginx-and-process-manager-2-logs-periodically][Review Nginx and Process Manager 2 Logs Periodically]]
+  - [[#plan-for-certificate-renewal-verification][Plan for Certificate Renewal Verification]]
+- [[#phase-10-optional-enhancements][Phase 10: Optional Enhancements]]
+  - [[#add-additional-bluebeam-tools-as-needs-arise][Add Additional Bluebeam Tools as Needs Arise]]
+  - [[#implement-per-user-authentication-instead-of-a-shared-account][Implement Per-User Authentication Instead of a Shared Account]]
+  - [[#add-rate-limiting-and-request-logging][Add Rate Limiting and Request Logging]]
+  - [[#containerize-the-application-with-docker][Containerize the Application with Docker]]
+  - [[#phase-11-containerize-the-application-with-docker][Phase 11: Containerize the Application with Docker]]
+    - [[#confirm-prerequisites-before-beginning][Confirm Prerequisites Before Beginning]]
+    - [[#install-docker-engine-on-the-raspberry-pi][Install Docker Engine on the Raspberry Pi]]
+    - [[#add-your-user-to-the-docker-group][Add Your User to the Docker Group]]
+    - [[#install-docker-compose-plugin][Install Docker Compose Plugin]]
+    - [[#create-a-dockerfile-in-the-project-root][Create a Dockerfile in the Project Root]]
+    - [[#create-a-dockerignore-file][Create a Dockerignore File]]
+    - [[#create-a-docker-compose-configuration-file][Create a Docker Compose Configuration File]]
+    - [[#commit-the-new-files-to-the-git-repository][Commit the New Files to the Git Repository]]
+    - [[#pull-the-updated-code-onto-the-raspberry-pi][Pull the Updated Code Onto the Raspberry Pi]]
+    - [[#stop-and-remove-the-process-manager-2-deployment][Stop and Remove the Process Manager 2 Deployment]]
+    - [[#build-the-docker-image-on-the-raspberry-pi][Build the Docker Image on the Raspberry Pi]]
+    - [[#start-the-containerized-application][Start the Containerized Application]]
+    - [[#inspect-the-container-logs-to-confirm-startup][Inspect the Container Logs to Confirm Startup]]
+    - [[#verify-the-server-is-still-reachable-through-nginx][Verify the Server Is Still Reachable Through Nginx]]
+    - [[#test-end-to-end-through-claude][Test End-to-End Through Claude]]
+    - [[#document-the-new-operational-commands][Document the New Operational Commands]]
+    - [[#set-up-a-log-rotation-strategy][Set Up a Log Rotation Strategy]]
+    - [[#establish-a-routine-for-updating-the-base-image][Establish a Routine for Updating the Base Image]]
+    - [[#clean-up-unused-docker-resources-periodically][Clean Up Unused Docker Resources Periodically]]
+      - [[#phase-12-optional-docker-enhancements][Phase 12: Optional Docker Enhancements]]
+
+* Project Goal
+The goal of this project is to build a standalone Model Context Protocol (MCP) server that connects the Bluebeam Studio API with an Atlassian Forge Rovo Agent. This integration will empower users to extract and review document comments from Bluebeam sessions using simple, natural language queries directly within their Atlassian workspace. By centralizing the authentication and API logic, the MCP server acts as a secure, reusable bridge that seamlessly securely delivers your design data to enterprise AI tools.
+* Plain Language Steps
+The primary goal of this project is to design and deploy a standalone Model Context Protocol server that acts as a secure intermediary between AI clients, such as an Atlassian Rovo Agent, and the Bluebeam Studio API. This architecture will standardize the extraction of document comments and markups from Bluebeam sessions, enabling users to seamlessly query and retrieve project feedback using natural language directly from their connected workspaces. The resulting server will be reusable, modular, and responsible for handling all complex API interactions and authentication flows with Bluebeam.
+
+To begin this project, you will first need to establish the necessary credentials with Bluebeam. This involves registering a new application within the Bluebeam Developer Portal to obtain your client ID and client secret, while ensuring you request the appropriate permissions for reading session data, document metadata, and markups.
+
+Once your credentials are in place, the next phase is developing the core server application. You can choose a language like Node.js or Python and utilize the official Model Context Protocol SDKs to initialize a basic server structure. Within this server code, you will define the specific tools that the AI model can call. These tools will map to the Bluebeam API and include functions for listing available sessions, retrieving the documents within a specific session, and ultimately extracting the comments from a given document.
+
+As you build these tools, you must implement a robust authentication flow. Your server needs to manage the OAuth 2.0 process to securely authenticate users with Bluebeam, handle the token exchange, refresh expired tokens, and attach the resulting access tokens to all outgoing requests made to the Bluebeam Studio API.
+
+After local development and testing are complete, you will move to the deployment phase. You will need to host your server application on a reliable cloud platform that supports secure connections, ensuring it is accessible over the internet to your Atlassian environment.
+
+The final stage involves configuring your Atlassian Rovo Agent to recognize and communicate with your newly deployed server. You will configure the agent within the Atlassian Forge environment to point to your server's endpoint, allowing it to automatically discover the Bluebeam tools you defined. From there, you can refine the agent's natural language instructions to ensure it understands exactly how to utilize the server to fetch session comments and how to format that information for the user.
+
+* Design Decisions Needed
+#+begin_comment
+I would like to next focus on determining the major design decisions. These design decisions will then inform what information is needed such as credentials, accounts, and tools needed.
+#+end_comment
+
+** Design Decision 1: Programming Language
+The first major design decision involves selecting the programming language and the corresponding Model Context Protocol SDK. The official SDKs primarily support Node.js and Python. Choosing Node.js might align well if your team is already familiar with the Atlassian Forge environment, which heavily utilizes JavaScript and TypeScript, while Python offers robust data parsing and manipulation libraries. Your choice here will dictate the local development environment tools, IDEs, and package managers you need to install.
+
+#+begin_comment
+For the first design decision, I will use node.js as I am more familiar with javascript.
+#+end_comment
+
+Selecting Node.js is a practical choice that aligns well with the Atlassian Forge ecosystem and leverages your existing JavaScript knowledge. By selecting Node.js, you will utilize the official Model Context Protocol SDK for TypeScript and JavaScript. While you can write this in standard JavaScript, adopting TypeScript is highly recommended when dealing with complex, nested JSON responses like those returned by the Bluebeam Studio API. This approach helps catch data structure errors during development rather than at runtime.
+
+This language choice directly dictates the tools and packages required to initialize your project. You will need a local installation of Node.js along with a package manager such as npm, yarn, or pnpm. For your core project dependencies, you will install the official MCP server SDK, a web framework to manage incoming network requests, and an HTTP client like Axios or the native fetch API to communicate with the Bluebeam endpoints. Your development environment will simply require a standard code editor like Visual Studio Code.
+
+** Design Decision 2: MCP Transport Protocol
+Another critical decision is determining the specific MCP transport protocol your architecture will utilize. Because you are connecting a cloud-based client like an Atlassian Rovo Agent to a standalone server, you must use HTTP with Server-Sent Events rather than the standard input and output transport method typically used for local desktop applications. This decision dictates that your server application must include a web framework capable of handling incoming HTTP POST requests for tool execution and maintaining persistent Server-Sent Event connections to stream responses back to Rovo.
+
+The Model Context Protocol transport layer is responsible for standardizing how messages are passed back and forth between an AI client and your data server. At its core, the protocol uses a standard messaging format called JSON-RPC 2.0, which ensures that every request for data, execution of a tool, or error message follows a predictable, structured layout. To actually move these JSON messages between systems, the protocol relies on two primary transport mechanisms: standard input and output for local connections, and HTTP with Server-Sent Events for remote connections.
+
+The local transport method, utilizing standard input and output streams, is typically used when the AI application and the server are running on the exact same machine. In this scenario, the AI client launches the server as a background process and communicates with it directly through the operating system's basic data streams. While this is highly efficient for desktop AI assistants, it is not applicable to your project because the Atlassian Rovo agent lives in the cloud and cannot directly launch local processes on your machine.
+
+For cloud-based integrations like yours, the protocol uses the HTTP transport method, which relies heavily on a web technology called Server-Sent Events. Server-Sent Events allow a web server to open a single, long-lived, one-way connection to a client. When the Atlassian Rovo agent connects to your Express server, your server will establish this persistent stream. This open channel is how your server will push all notifications, tool results, and responses back to the Rovo agent as soon as they are ready, without the agent needing to constantly ping the server for updates.
+
+Because Server-Sent Events only allow data to flow from the server to the client, the protocol uses standard HTTP POST requests for the other half of the conversation. When the Rovo agent needs your server to execute a tool, such as extracting comments from a Bluebeam document, it packages that request into a JSON message and sends it via an HTTP POST request to a specific web address on your Express server.
+
+Your Express server will be designed to listen for these incoming POST requests. Once it receives one, it will execute the required Bluebeam API calls, format the extracted comments, and then push the final JSON response back down the open Server-Sent Events stream it previously established with the agent. This combination of standard HTTP POST requests for incoming commands and Server-Sent Events for outgoing streaming responses allows two completely separate cloud environments to communicate securely and reliably in real time.
+
+** Design Decision 3: Hosting and Deployment
+You must also decide on the hosting and deployment infrastructure for the MCP server. You can choose a containerized approach using Docker deployed on fully managed serverless container platforms like Google Cloud Run or AWS Fargate, or opt for a traditional virtual machine. Containerization is highly recommended for MCP servers as it ensures consistent environments between local development and production. This decision will define which specific cloud provider accounts you need to create and what container registry and deployment pipelines are required.
+
+Because the Atlassian Rovo Agent operates entirely in the cloud, your Node.js and Express server must be deployed to the public internet and secured with an HTTPS connection. You have a few primary paths for hosting this application, ranging from very beginner-friendly to enterprise-grade scalable solutions. The main options include Platform-as-a-Service providers, serverless container platforms, and traditional virtual machines.
+
+The easiest approach is using a Platform-as-a-Service, with popular choices being Render, Heroku, or Railway. These platforms are incredibly beginner-friendly because they handle almost all the infrastructure work for you. You typically just connect your GitHub repository to the platform, and every time you update your code, the platform automatically builds your Node.js application, assigns it a secure HTTPS web address, and keeps it running. This is often the best choice if you want to get up and running quickly without learning about underlying server operations, and many of these providers offer inexpensive or free tiers for development.
+
+The second option is using serverless container platforms like Google Cloud Run, AWS App Runner, or Azure Container Apps. For this method, you package your Node.js application and all its dependencies into a standardized unit called a Docker container. You then upload this container to your cloud provider. These serverless platforms are excellent because they automatically scale up when your Rovo Agent sends many requests and scale down to zero when not in use, meaning you only pay for the exact compute time you consume. While this is the industry standard for production deployments due to its security and scalability, it does require you to learn the basics of Docker.
+
+The third option is a traditional virtual machine, such as an AWS EC2 instance or a DigitalOcean Droplet. This gives you a blank server where you manually install Node.js, configure the web server, set up firewalls, and manage your own SSL certificates for HTTPS. While it offers total control, it requires significant maintenance and is generally considered overkill for a lightweight Model Context Protocol server.
+
+For the core technology and hardware, the project will be built using Node.js and the Express web framework, running directly on the operating system of your Raspberry Pi 5. This bare-metal approach avoids the extra complexity of Docker containers while taking advantage of your existing hardware. To ensure the application runs continuously in the background and automatically restarts if the device ever reboots, you will use the PM2 process manager to oversee the Node.js execution.
+
+To connect this local server to the cloud-based Atlassian Rovo agent, the system will leverage your existing Cloudflare Tunnel setup. You will create a dedicated subdomain on your current domain to securely route external internet traffic past your home network's firewall. Once the traffic reaches the Raspberry Pi, your existing Nginx web server will act as a reverse proxy. Nginx will take the incoming requests from Cloudflare and quietly forward them to the specific local port where your Express application is listening.
+
+Because the Model Context Protocol requires a constant stream of data for cloud connections, your Express server will communicate using HTTP with Server-Sent Events. To ensure this continuous stream works properly, you will need to adjust the Nginx configuration for this specific subdomain to disable proxy buffering and read timeouts. This simple configuration tweak ensures that Nginx instantly passes the data from your Express server back to the Atlassian Rovo agent without trying to hold onto the messages, allowing for seamless, real-time communication between your home server and the Atlassian cloud.
+
+** Design Decision 4: Authentication and Secrets Management
+The authentication strategy for the Bluebeam Studio API is another vital design choice that impacts your database needs. You need to determine whether the integration will use a machine-to-machine service account for all requests using the client credentials flow, or if it requires individual user authentication using the authorization code flow. If you require user-level authentication to ensure users only see comments they have permission to view in Bluebeam, you will need to design a secure token storage system. This requires provisioning a managed database like PostgreSQL or Redis to handle the OAuth token lifecycle, securely mapping Atlassian user IDs to their respective Bluebeam access and refresh tokens.
+
+Your decision to use a single, shared account for bb-dev@lbl.gov drastically simplifies the entire architecture of your project. By bypassing individual user logins, you eliminate the need to build complex web interfaces for OAuth pop-ups, and you completely remove the need to securely map Atlassian user IDs to individual Bluebeam accounts.
+
+Because you only need to manage one single set of credentials, you do not need to install or configure a database like SQLite. Instead, your Node.js application can handle token storage using a simple, secure local text file, such as a JSON file, stored directly in your project directory on the Raspberry Pi.
+
+To make this work securely with Bluebeam's system, you will perform a one-time manual setup phase. You will generate an initial authorization code by logging in as bb-dev@lbl.gov through a web browser. You will provide this code to your Node.js server once, and the server will exchange it for a temporary Access Token and a long-lived Refresh Token, saving them to your local JSON file.
+
+From that point forward, your server operates completely in the background. You will store your existing Client ID and Client Secret safely in a hidden .env text file on your Raspberry Pi, keeping them entirely out of your application's source code. Whenever the Atlassian Rovo agent requests document comments, your Express server will check if its current Bluebeam Access Token has expired. If it has, the server will automatically use the hidden Client credentials and the saved Refresh Token to silently fetch a new Access Token, update the local JSON file, and immediately proceed with fetching the requested data.
+
+
+* Information Needed 
+Here is the ordered list summarizing all the required information, credentials, software, and their associated costs:
+
+- Hardware and Operating System: You will utilize your existing Raspberry Pi 5 running its standard operating system as the physical foundation for hosting the server. Because you already own this hardware and the operating system is free, there is zero additional cost for this component.
+- Network and Web Routing Infrastructure: You will use your active Cloudflare Tunnel connected to your domain, alongside the Nginx web server currently installed on your device, to securely route internet traffic. Cloudflare's tunneling service is free under their standard tier, and Nginx is completely free and open-source software.
+- Core Programming Environment: You will need to install Node.js and its default package manager, npm, directly onto the Raspberry Pi to write and execute your server code. These are free, open-source development tools that carry no licensing fees or subscription costs.
+- Application Framework and Process Management: Your project requires the Express.js framework to handle the incoming HTTP requests and the PM2 process manager to keep the server running silently in the background. Both of these are widely used open-source Node.js packages and are completely free to download and deploy.
+- Bluebeam Authentication Credentials: You need the Bluebeam Developer Client ID and Client Secret you already possess, as well as the login credentials for the shared bb-dev@lbl.gov account. These API credentials and account access are provided as part of your organization's existing Bluebeam Studio subscription, meaning there is no extra cost to generate or use them.
+- Token Management Storage: Your server will require a simple local JSON file to save the Bluebeam Access and Refresh tokens, and a hidden .env text file to safely store your Client Secret. These are simply standard text files managed by your operating system, so they cost nothing to implement.
+Atlassian Cloud Workspace: You must have an Atlassian Forge developer account and access to the Atlassian Rovo Agent platform to configure the AI client. While building and testing Forge apps is free for developers, using Rovo in production requires your organization to maintain its existing paid Atlassian enterprise licenses.
+
+
+* Detailed Work Breakdown
+
+* TODO Phase 1: Local Development Environment Setup (Laptop)
+** TODO Install Node.js and Git on the local machine.
+** TODO Create a new project directory and initialize it with npm.
+** TODO Install required Node.js dependencies (Express, HTTP client, MCP SDK, dotenv).
+** TODO Initialize a local Git repository for the project.
+
+* TODO Phase 2: Bluebeam Authentication Logic (Laptop)
+** TODO Create a hidden .env file to securely store the Bluebeam Client ID and Client Secret.
+** TODO Write a temporary script to generate the initial OAuth 2.0 authorization URL.
+** TODO Navigate to the generated URL and log in using the shared bb-dev@lbl.gov account to retrieve the authorization code.
+** TODO Write a function to exchange the authorization code for an Access Token and a Refresh Token.
+** TODO Configure the application to save the resulting tokens into a local JSON file.
+** TODO Implement the token refresh logic to automatically fetch and save a new Access Token whenever the current one expires.
+
+* TODO Phase 3: Core Server Logic and MCP Tool Definition (Laptop)
+** TODO Configure the Express framework to accept incoming HTTP POST requests.
+** TODO Implement the Server-Sent Events (SSE) connection logic required by the Model Context Protocol.
+** TODO Define the MCP tool to query and list available Bluebeam Studio Sessions.
+** TODO Define the MCP tool to retrieve the document list for a specified session ID.
+** TODO Define the MCP tool to extract markups and comments from a specified document ID using the active access token.
+
+* TODO Phase 4: Local and End-to-End Testing (Laptop)
+** TODO Use a local API developer tool to send mock requests to the Express server to verify Bluebeam data retrieval and token refreshing.
+** TODO Run a temporary tunneling service (such as Ngrok) on the laptop to expose the local server to a public HTTPS address.
+** TODO Update the Atlassian Forge project configuration to point the Rovo Agent to this temporary public address.
+** TODO Test the full end-to-end integration by asking the Atlassian Rovo Agent to retrieve comments from the workspace.
+
+* TODO Phase 5: Permanent Network Routing Setup (Raspberry Pi 5)
+** TODO Create a minimal "Hello World" Express application on the Raspberry Pi to test routing.
+** TODO Configure the Cloudflare Tunnel to route the chosen subdomain to the Nginx web server.
+** TODO Update the Nginx configuration to forward traffic from the subdomain to the local port of the test application.
+** TODO Modify the Nginx configuration for this specific route to disable proxy buffering and remove read timeouts to support continuous SSE streams.
+** TODO Access the subdomain from an external network to verify traffic correctly reaches the test application.
+
+* TODO Phase 6: Deployment via GitHub (Laptop to Raspberry Pi)
+** TODO Add the .env file and the JSON token file to the .gitignore configuration on the laptop.
+** TODO Commit the completed codebase and push it to a private GitHub repository.
+** TODO Log into the Raspberry Pi and clone the private repository from GitHub.
+** TODO Run the npm install command inside the Raspberry Pi project directory to download the dependencies.
+** TODO Securely transfer the .env file and the active JSON token file directly from the laptop to the Raspberry Pi over the local network.
+
+* TODO Phase 7: Production Launch and Final Testing (Raspberry Pi)
+** TODO Install the PM2 process manager globally on the Raspberry Pi.
+** TODO Start the Node.js application using PM2 to ensure it runs continuously in the background.
+** TODO Replace the temporary tunneling address in the Atlassian Forge configuration with the permanent Cloudflare subdomain.
+** TODO Issue a final natural language query to the Atlassian Rovo Agent to confirm the production server successfully extracts and streams Bluebeam comments.
+
+
+* Detailed Work Breakdown
+* TODO Phase 1: Local Development Environment Setup (Laptop)
+** TODO Install Node.js and Git on the Local Machine
+Verify installations by running the following commands in your terminal:
+#+BEGIN_SRC bash
+node -v
+npm -v
+git --version
+#+END_SRC
+Node.js should be version 18 or higher for compatibility with the Model Context Protocol Software Development Kit.
+
+** TODO Create a New Project Directory and Initialize it with Node Package Manager
+#+BEGIN_SRC bash
+mkdir bluebeam-mcp-server
+cd bluebeam-mcp-server
+npm init -y
+#+END_SRC
+
+** TODO Install Required Node.js Dependencies
+Install Express for the web server, Axios for Hypertext Transfer Protocol requests, dotenv for managing secrets, and the Model Context Protocol Software Development Kit.
+#+BEGIN_SRC bash
+npm install express axios dotenv @modelcontextprotocol/sdk
+#+END_SRC
+
+** TODO Initialize a Local Git Repository for the Project
+#+BEGIN_SRC bash
+git init
+#+END_SRC
+
+* TODO Phase 2: Bluebeam Authentication Logic (Laptop)
+** TODO Create a Hidden Environment File to Securely Store the Bluebeam Client Identifier and Client Secret
+Create a file named `.env` in the root directory:
+#+BEGIN_SRC text
+BLUEBEAM_CLIENT_ID=your_client_id_here
+BLUEBEAM_CLIENT_SECRET=your_client_secret_here
+REDIRECT_URI=http://localhost:3000/callback
+#+END_SRC
+
+** TODO Write a Temporary Script to Generate the Initial Open Authorization 2.0 Authorization Uniform Resource Locator
+Create `generate-auth.js`. The `scope` parameter is required by Bluebeam to grant access to the Studio Application Programming Interface:
+#+BEGIN_SRC javascript
+require('dotenv').config();
+const params = new URLSearchParams({
+  response_type: 'code',
+  client_id: process.env.BLUEBEAM_CLIENT_ID,
+  redirect_uri: process.env.REDIRECT_URI,
+  scope: 'full_user jobs_api'
+});
+const authUrl = `https://authserver.bluebeam.com/auth/oauth/authorize?${params.toString()}`;
+console.log("Navigate to this URL in your browser:", authUrl);
+#+END_SRC
+
+** TODO Retrieve the Authorization Code Using the Shared Account
+1. Run `node generate-auth.js`.
+2. Open the printed Uniform Resource Locator in a browser.
+3. Log in with `bb-dev@lbl.gov`.
+4. The browser will redirect to `http://localhost:3000/callback?code=AUTH_CODE_HERE`. The page will fail to load (because no server is running there yet), but copy the code value from the address bar.
+
+** TODO Write a Function to Exchange the Authorization Code for Tokens and Save Them
+Create `get-tokens.js` and paste your copied code into the script. Notice that we add a calculated `expires_at` timestamp to make refresh logic reliable:
+#+BEGIN_SRC javascript
+require('dotenv').config();
+const axios = require('axios');
+const fs = require('fs');
+
+async function fetchTokens(authCode) {
+  const credentials = Buffer.from(
+    `$${process.env.BLUEBEAM_CLIENT_ID}:$${process.env.BLUEBEAM_CLIENT_SECRET}`
+  ).toString('base64');
+
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: authCode,
+    redirect_uri: process.env.REDIRECT_URI
+  });
+
+  const response = await axios.post(
+    'https://authserver.bluebeam.com/auth/oauth/token',
+    body.toString(),
+    {
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }
+  );
+
+  const tokenData = response.data;
+  // Add expiration timestamp (subtract 60 seconds as a safety buffer)
+  tokenData.expires_at = Date.now() + (tokenData.expires_in - 60) * 1000;
+
+  fs.writeFileSync('tokens.json', JSON.stringify(tokenData, null, 2));
+  console.log("Tokens saved to tokens.json");
+}
+fetchTokens('PASTE_AUTH_CODE_HERE');
+#+END_SRC
+Run `node get-tokens.js`.
+
+** TODO Implement the Token Refresh Logic
+Create `auth-manager.js` to handle loading and refreshing tokens automatically based on the stored expiration timestamp:
+#+BEGIN_SRC javascript
+const fs = require('fs');
+const axios = require('axios');
+require('dotenv').config();
+
+async function getValidToken() {
+  let tokens = JSON.parse(fs.readFileSync('tokens.json', 'utf8'));
+
+  if (Date.now() < tokens.expires_at) {
+    return tokens.access_token;
+  }
+
+  // Token expired, refresh it
+  const credentials = Buffer.from(
+    `$${process.env.BLUEBEAM_CLIENT_ID}:$${process.env.BLUEBEAM_CLIENT_SECRET}`
+  ).toString('base64');
+
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: tokens.refresh_token
+  });
+
+  const response = await axios.post(
+    'https://authserver.bluebeam.com/auth/oauth/token',
+    body.toString(),
+    {
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }
+  );
+
+  const newTokens = response.data;
+  newTokens.expires_at = Date.now() + (newTokens.expires_in - 60) * 1000;
+  // Preserve refresh token if a new one was not issued
+  if (!newTokens.refresh_token) newTokens.refresh_token = tokens.refresh_token;
+
+  fs.writeFileSync('tokens.json', JSON.stringify(newTokens, null, 2));
+  return newTokens.access_token;
+}
+module.exports = { getValidToken };
+#+END_SRC
+
+* TODO Phase 3: Core Server Logic and Model Context Protocol Tool Definition (Laptop)
+** TODO Configure Express and Implement the Server-Sent Events Connection Logic
+Create `index.js`. Note that the message endpoint must NOT use `express.json()` middleware, as the transport parses the body itself:
+#+BEGIN_SRC javascript
+const express = require('express');
+const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
+const { SSEServerTransport } = require('@modelcontextprotocol/sdk/server/sse.js');
+const {
+  ListToolsRequestSchema,
+  CallToolRequestSchema
+} = require('@modelcontextprotocol/sdk/types.js');
+const { getValidToken } = require('./auth-manager');
+const axios = require('axios');
+
+const app = express();
+
+const server = new Server(
+  { name: "bluebeam-mcp", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+let transport;
+
+app.get('/mcp/sse', async (req, res) => {
+  transport = new SSEServerTransport('/mcp/messages', res);
+  await server.connect(transport);
+});
+
+// IMPORTANT: do not use express.json() here; the transport handles parsing.
+app.post('/mcp/messages', async (req, res) => {
+  if (transport) {
+    await transport.handlePostMessage(req, res);
+  } else {
+    res.status(400).send("Server-Sent Events connection not established");
+  }
+});
+#+END_SRC
+
+** TODO Define the Model Context Protocol Tools for Bluebeam Inside index.js
+Add the tool definitions to `index.js`. The Model Context Protocol Software Development Kit requires schema objects (not string literals) when registering handlers:
+#+BEGIN_SRC javascript
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: "get_sessions",
+      description: "List available Bluebeam Studio sessions",
+      inputSchema: { type: "object", properties: {} }
+    },
+    {
+      name: "get_session_docs",
+      description: "List documents within a specified Bluebeam session",
+      inputSchema: {
+        type: "object",
+        properties: { sessionId: { type: "string" } },
+        required: ["sessionId"]
+      }
+    },
+    {
+      name: "get_doc_comments",
+      description: "Extract markups (comments) from a specific document in a session",
+      inputSchema: {
+        type: "object",
+        properties: {
+          sessionId: { type: "string" },
+          docId: { type: "string" }
+        },
+        required: ["sessionId", "docId"]
+      }
+    }
+  ]
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const token = await getValidToken();
+  const headers = { Authorization: `Bearer ${token}` };
+  const baseUrl = 'https://studioapi.bluebeam.com/publicapi/v1';
+
+  try {
+    if (request.params.name === "get_sessions") {
+      const res = await axios.get(`${baseUrl}/sessions`, { headers });
+      return { content: [{ type: "text", text: JSON.stringify(res.data) }] };
+    }
+    if (request.params.name === "get_session_docs") {
+      const { sessionId } = request.params.arguments;
+      const res = await axios.get(`$${baseUrl}/sessions/$${sessionId}/files`, { headers });
+      return { content: [{ type: "text", text: JSON.stringify(res.data) }] };
+    }
+    if (request.params.name === "get_doc_comments") {
+      const { sessionId, docId } = request.params.arguments;
+      const res = await axios.get(
+        `$${baseUrl}/sessions/$${sessionId}/files/${docId}/markups`,
+        { headers }
+      );
+      return { content: [{ type: "text", text: JSON.stringify(res.data) }] };
+    }
+    throw new Error(`Unknown tool: ${request.params.name}`);
+  } catch (e) {
+    return {
+      content: [{ type: "text", text: `Error: ${e.message}` }],
+      isError: true
+    };
+  }
+});
+
+app.listen(3000, () => console.log('Model Context Protocol Server running on port 3000'));
+#+END_SRC
+
+* TODO Phase 4: Local and End-to-End Testing (Laptop)
+** TODO Run the Server Locally and Confirm It Starts Without Errors
+#+BEGIN_SRC bash
+node index.js
+#+END_SRC
+You should see `Model Context Protocol Server running on port 3000`. Leave this terminal running.
+
+** TODO Install Ngrok to Expose the Local Server to the Public Internet
+Ngrok creates a temporary public Uniform Resource Locator that forwards to your local machine, allowing Claude's servers to reach your laptop for testing before deploying to the Raspberry Pi.
+1. Download and install Ngrok from https://ngrok.com/download.
+2. Sign up for a free account and copy your authentication token.
+3. Configure Ngrok with your token:
+#+BEGIN_SRC bash
+ngrok config add-authtoken YOUR_NGROK_TOKEN
+#+END_SRC
+
+** TODO Start an Ngrok Tunnel to Port 3000
+In a new terminal (leave the server running in the original one):
+#+BEGIN_SRC bash
+ngrok http 3000
+#+END_SRC
+Ngrok will display a forwarding Uniform Resource Locator such as `https://abc123.ngrok-free.app`. Copy this Uniform Resource Locator.
+
+** TODO Create a Claude Custom Connector Using the Ngrok Uniform Resource Locator
+1. Log into Claude at https://claude.ai.
+2. Navigate to Settings, then Connectors, then Add Custom Connector.
+3. Provide a name such as `Bluebeam Dev`.
+4. For the Server-Sent Events endpoint, enter your Ngrok Uniform Resource Locator followed by `/mcp/sse` (for example, `https://abc123.ngrok-free.app/mcp/sse`).
+5. Save the connector. Claude will attempt a handshake; you should see activity in both the Ngrok terminal and your server terminal.
+
+** TODO Test Each Tool from Within a Claude Conversation
+Start a new Claude conversation with the connector enabled and try prompts such as:
+- "List my Bluebeam Studio sessions."
+- "Show me the documents in session [ID from previous response]."
+- "Extract the markups from document [ID] in session [ID]."
+
+Verify that the responses contain real data from Bluebeam. If errors occur, check the server terminal for stack traces and the Ngrok inspection interface at http://localhost:4040 to view request and response payloads.
+
+** TODO Commit the Working Code to a Remote Git Repository
+Create a `.gitignore` file first to avoid committing secrets:
+#+BEGIN_SRC text
+node_modules/
+.env
+tokens.json
+#+END_SRC
+Then commit and push to GitHub or another remote:
+#+BEGIN_SRC bash
+git add .
+git commit -m "Working Bluebeam Model Context Protocol server"
+git remote add origin git@github.com:yourusername/bluebeam-mcp-server.git
+git push -u origin main
+#+END_SRC
+
+* TODO Phase 5: Raspberry Pi Preparation
+** TODO Flash the Raspberry Pi Operating System Onto the MicroSD Card
+1. Download the Raspberry Pi Imager from https://www.raspberrypi.com/software/.
+2. Insert the MicroSD card into your laptop.
+3. Open the Imager and select Raspberry Pi Operating System Lite (64-bit) — the Lite version omits the desktop environment, which is unnecessary for a server.
+4. Before writing, click the gear icon to preconfigure: enable Secure Shell, set a username and password, and configure Wi-Fi credentials if applicable.
+5. Write the image to the card.
+
+** TODO Boot the Raspberry Pi and Connect via Secure Shell
+1. Insert the MicroSD card into the Pi, connect Ethernet (or rely on the preconfigured Wi-Fi), and power on.
+2. Find the Pi's Internet Protocol address from your router's administrative interface or by running `ping raspberrypi.local` from your laptop.
+3. Connect via Secure Shell:
+#+BEGIN_SRC bash
+ssh yourusername@raspberrypi.local
+#+END_SRC
+
+** TODO Update the System and Install Node.js and Git on the Raspberry Pi
+#+BEGIN_SRC bash
+sudo apt update && sudo apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs git
+node -v
+#+END_SRC
+
+** TODO Install Process Manager 2 Globally for Persistent Process Management
+Process Manager 2 keeps the Node.js server running even after you disconnect and automatically restarts it if it crashes. The log rotation module prevents log files from filling the MicroSD card over time.
+#+BEGIN_SRC bash
+sudo npm install -g pm2
+pm2 install pm2-logrotate
+#+END_SRC
+
+* TODO Phase 6: Deploy the Application to the Raspberry Pi
+** TODO Clone the Repository Onto the Raspberry Pi
+#+BEGIN_SRC bash
+cd ~
+git clone https://github.com/yourusername/bluebeam-mcp-server.git
+cd bluebeam-mcp-server
+npm install
+#+END_SRC
+
+** TODO Transfer the Environment File and Tokens File from Your Laptop
+Because `.env` and `tokens.json` are excluded from Git, transfer them securely using Secure Copy Protocol. Run these commands from your laptop, inside the project directory:
+#+BEGIN_SRC bash
+scp .env yourusername@raspberrypi.local:~/bluebeam-mcp-server/
+scp tokens.json yourusername@raspberrypi.local:~/bluebeam-mcp-server/
+#+END_SRC
+
+** TODO Update the Redirect Uniform Resource Identifier in the Pi's Environment File
+On the Pi, edit `.env` so that `REDIRECT_URI` points to the eventual public address (this will become relevant when tokens need to be reissued in the future). For now, the redirect Uniform Resource Identifier does not affect server operation as long as valid tokens already exist in `tokens.json`.
+
+** TODO Start the Server with Process Manager 2 and Enable Boot-Time Startup
+#+BEGIN_SRC bash
+pm2 start index.js --name bluebeam-mcp
+pm2 save
+pm2 startup
+#+END_SRC
+The `pm2 startup` command will print another command for you to copy, paste, and run — this registers Process Manager 2 with the system service manager so it restarts on reboot.
+
+** TODO Verify the Server Is Running and Reachable on the Local Network
+From your laptop:
+#+BEGIN_SRC bash
+curl http://raspberrypi.local:3000/mcp/sse
+#+END_SRC
+You should see a stream begin (use Control-C to exit). Check logs with:
+#+BEGIN_SRC bash
+pm2 logs bluebeam-mcp
+#+END_SRC
+
+* TODO Phase 7: Expose the Raspberry Pi to the Public Internet via Nginx and Hypertext Transfer Protocol Secure
+** TODO Configure a Static Internal Internet Protocol Address for the Pi
+Either reserve the Pi's address in your router's Dynamic Host Configuration Protocol settings (recommended) or configure a static address on the Pi itself by editing `/etc/dhcpcd.conf`.
+
+** TODO Set Up Port Forwarding on the Network Router
+In your router's administrative interface, forward external Transmission Control Protocol port 443 to the Pi's internal Internet Protocol address on port 443. You may need to coordinate with your network administrator (LBL may have restrictions on inbound connections).
+
+** TODO Obtain a Public Domain Name
+You will need a domain name for the Hypertext Transfer Protocol Secure certificate. Options include purchasing one through a registrar such as Namecheap or using a free Dynamic Domain Name System service such as DuckDNS. Point an A record at your network's public Internet Protocol address.
+
+** TODO Install Nginx and Certbot on the Pi
+Nginx will serve as a reverse proxy that terminates Hypertext Transfer Protocol Secure connections and forwards plain Hypertext Transfer Protocol traffic to the Node.js server. Certbot from Let's Encrypt provides free Transport Layer Security certificates.
+#+BEGIN_SRC bash
+sudo apt install -y nginx certbot python3-certbot-nginx
+#+END_SRC
+
+** TODO Create an Nginx Site Configuration for the Model Context Protocol Server
+Create `/etc/nginx/sites-available/bluebeam-mcp`:
+#+BEGIN_SRC nginx
+server {
+    listen 80;
+    server_name your-domain.example.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Critical settings for Server-Sent Events
+        proxy_set_header Connection '';
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 24h;
+    }
+}
+#+END_SRC
+Enable the site and reload Nginx:
+#+BEGIN_SRC bash
+sudo ln -s /etc/nginx/sites-available/bluebeam-mcp /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+#+END_SRC
+
+** TODO Obtain a Hypertext Transfer Protocol Secure Certificate with Certbot
+#+BEGIN_SRC bash
+sudo certbot --nginx -d your-domain.example.com
+#+END_SRC
+Certbot will automatically modify your Nginx configuration to listen on port 443 with the obtained certificate and set up automatic renewal via a systemd timer.
+
+** TODO Confirm the Server Is Reachable from the Public Internet
+From a device on a different network (for example, a phone on cellular data):
+#+BEGIN_SRC bash
+curl https://your-domain.example.com/mcp/sse
+#+END_SRC
+
+* TODO Phase 8: Switch the Claude Custom Connector to Production
+** TODO Update the Claude Custom Connector Uniform Resource Locator
+In Claude's Connectors settings, edit the Bluebeam connector and replace the Ngrok Uniform Resource Locator with `https://your-domain.example.com/mcp/sse`.
+
+** TODO Conduct Final End-to-End Tests with the Shared Account
+Run through each tool again (list sessions, list documents, extract markups) and confirm everything works against the production deployment.
+
+** TODO Document the Setup for the Team
+Create a `README.md` in the repository describing the architecture, how to issue new tokens if the refresh token ever becomes invalid, and how to monitor logs via `pm2 logs bluebeam-mcp` on the Pi.
+
+* TODO Phase 9: Ongoing Maintenance Considerations
+** TODO Monitor Token Health
+Even with refresh logic, refresh tokens occasionally expire (typically after long periods of inactivity or if revoked). Set a reminder to verify the connector works at least monthly, and re-run the authorization flow from Phase 2 if needed.
+
+** TODO Apply Operating System and Dependency Updates Periodically
+On the Pi:
+#+BEGIN_SRC bash
+sudo apt update && sudo apt upgrade -y
+cd ~/bluebeam-mcp-server && npm outdated
+#+END_SRC
+Update Node.js dependencies cautiously, testing locally first before pulling changes onto the Pi. Pay particular attention to updates of the Model Context Protocol Software Development Kit, since its application programming interface has evolved across versions.
+
+** TODO Back Up the Tokens File and Environment File
+Because `tokens.json` and `.env` are excluded from Git, store a copy in a secure location such as a password manager or encrypted backup. Losing the refresh token requires re-running the authorization flow with the shared Bluebeam account.
+
+** TODO Set Up Basic Uptime Monitoring
+Use a free service such as UptimeRobot or Better Stack to ping `https://your-domain.example.com/mcp/sse` every few minutes and alert you via email if the server becomes unreachable. This catches network outages, expired certificates, or crashed processes before users notice.
+
+** TODO Review Nginx and Process Manager 2 Logs Periodically
+Check for unusual activity or errors:
+#+BEGIN_SRC bash
+pm2 logs bluebeam-mcp --lines 100
+sudo tail -n 100 /var/log/nginx/access.log
+sudo tail -n 100 /var/log/nginx/error.log
+#+END_SRC
+
+** TODO Plan for Certificate Renewal Verification
+Certbot installs an automatic renewal timer, but verify it is functioning:
+#+BEGIN_SRC bash
+sudo systemctl status certbot.timer
+sudo certbot renew --dry-run
+#+END_SRC
+The dry run simulates renewal without actually requesting a new certificate, confirming that the renewal process will succeed when the current certificate nears expiration.
+
+* TODO Phase 10: Optional Enhancements
+** TODO Add Additional Bluebeam Tools as Needs Arise
+The Bluebeam Studio Application Programming Interface supports many more operations than the three implemented here, including uploading documents to sessions, posting replies to markups, retrieving session participants, and managing projects. Each new capability follows the same pattern: add an entry to the `ListToolsRequestSchema` handler and a corresponding branch in the `CallToolRequestSchema` handler in `index.js`.
+
+** TODO Implement Per-User Authentication Instead of a Shared Account
+The current design uses a single shared Bluebeam account (`bb-dev@lbl.gov`), meaning all actions through Claude appear to originate from that account. A more advanced design would have each Claude user authenticate with their own Bluebeam credentials. This requires storing tokens per user, adding a login flow accessible through the Model Context Protocol server, and is significantly more complex — only pursue it if accountability of individual actions becomes important.
+
+** TODO Add Rate Limiting and Request Logging
+Use Express middleware such as `express-rate-limit` to prevent runaway loops from exhausting your Bluebeam Application Programming Interface quota, and log all tool invocations to a file for auditing.
+
+** TODO Containerize the Application with Docker
+Wrapping the server in a Docker container simplifies future migrations off the Raspberry Pi (for example, to a cloud virtual machine) and isolates Node.js version requirements from the host system. This is a refinement rather than a necessity.
+
+** TODO Phase 11: Containerize the Application with Docker
+This phase replaces the Process Manager 2 deployment with a Docker-based deployment. Complete this only after the Process Manager 2 version has been running stably in production for at least a few weeks, so that you are debugging only one layer of complexity at a time.
+
+*** TODO Confirm Prerequisites Before Beginning
+Before starting, verify:
+- The Process Manager 2 deployment from Phase 6 is working correctly.
+- You have Secure Shell access to the Raspberry Pi.
+- You have backups of `.env` and `tokens.json` stored somewhere safe (such as a password manager).
+- The Raspberry Pi has at least one gigabyte of free disk space (`df -h` to check).
+
+*** TODO Install Docker Engine on the Raspberry Pi
+Docker provides an official convenience script that handles the Raspberry Pi's ARM architecture automatically.
+#+BEGIN_SRC bash
+curl -fsSL https://get.docker.com | sh
+#+END_SRC
+
+*** TODO Add Your User to the Docker Group
+This allows you to run Docker commands without prepending `sudo` to every command.
+#+BEGIN_SRC bash
+sudo usermod -aG docker $USER
+#+END_SRC
+You must log out and log back in (or close and reopen the Secure Shell session) for the group membership change to take effect. Verify with:
+#+BEGIN_SRC bash
+docker run hello-world
+#+END_SRC
+If this succeeds without `sudo`, the group change worked.
+
+*** TODO Install Docker Compose Plugin
+Docker Compose is a tool for defining and running multi-container applications using a configuration file rather than long command-line invocations. On modern Docker installations the Compose plugin is included automatically, but verify:
+#+BEGIN_SRC bash
+docker compose version
+#+END_SRC
+If the command is not found, install it explicitly:
+#+BEGIN_SRC bash
+sudo apt install -y docker-compose-plugin
+#+END_SRC
+
+*** TODO Create a Dockerfile in the Project Root
+On your laptop, in the project directory, create a file named `Dockerfile` (no file extension) with the following contents:
+#+BEGIN_SRC dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files first so dependency installation can be cached
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Copy the rest of the application source
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "index.js"]
+#+END_SRC
+The `node:20-alpine` base image is small (roughly fifty megabytes) and supports the ARM architecture used by the Raspberry Pi. The two-step copy pattern means that if you change only application code without modifying dependencies, Docker reuses the cached dependency layer and rebuilds quickly.
+
+*** TODO Create a Dockerignore File
+Create a file named `.dockerignore` in the project root. This file tells Docker which files to exclude when building the image, keeping the image small and preventing secrets from being baked into it.
+#+BEGIN_SRC text
+node_modules
+.env
+tokens.json
+.git
+.gitignore
+*.md
+Dockerfile
+.dockerignore
+#+END_SRC
+
+*** TODO Create a Docker Compose Configuration File
+Create a file named `docker-compose.yml` in the project root. This file describes how the container should be run, including which ports to expose, which files to mount, and what restart policy to apply.
+#+BEGIN_SRC yaml
+services:
+  bluebeam-mcp:
+    build: .
+    container_name: bluebeam-mcp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./tokens.json:/app/tokens.json
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/mcp/sse"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+#+END_SRC
+A few details worth understanding:
+- The `:ro` suffix on the environment file mount means read-only. The application never writes to this file.
+- The `tokens.json` mount is read-write because the token refresh logic updates the file when access tokens expire.
+- The `restart: unless-stopped` policy replaces what Process Manager 2 was doing previously: the container restarts automatically if it crashes or if the Pi reboots, but stays stopped if you explicitly stop it.
+- The healthcheck periodically verifies the server is responding. Docker marks the container as unhealthy if checks fail repeatedly, which is visible in `docker ps` output.
+
+*** TODO Commit the New Files to the Git Repository
+From your laptop:
+#+BEGIN_SRC bash
+git add Dockerfile .dockerignore docker-compose.yml
+git commit -m "Add Docker configuration"
+git push
+#+END_SRC
+
+*** TODO Pull the Updated Code Onto the Raspberry Pi
+Connect to the Pi via Secure Shell and pull the changes:
+#+BEGIN_SRC bash
+cd ~/bluebeam-mcp-server
+git pull
+#+END_SRC
+The existing `.env` and `tokens.json` files on the Pi remain in place because they are excluded from Git tracking.
+
+*** TODO Stop and Remove the Process Manager 2 Deployment
+Before starting the Docker container, stop the existing Process Manager 2 process to avoid a port conflict on port 3000.
+#+BEGIN_SRC bash
+pm2 stop bluebeam-mcp
+pm2 delete bluebeam-mcp
+pm2 save
+#+END_SRC
+If you want to remove Process Manager 2 from system startup entirely:
+#+BEGIN_SRC bash
+pm2 unstartup
+#+END_SRC
+Otherwise leave the startup registration in place — it does no harm with no processes registered.
+
+*** TODO Build the Docker Image on the Raspberry Pi
+The first build will take several minutes as Docker downloads the base image and installs dependencies. Subsequent rebuilds are faster due to layer caching.
+#+BEGIN_SRC bash
+cd ~/bluebeam-mcp-server
+docker compose build
+#+END_SRC
+
+*** TODO Start the Containerized Application
+#+BEGIN_SRC bash
+docker compose up -d
+#+END_SRC
+The `-d` flag stands for "detached" and runs the container in the background. Verify it is running:
+#+BEGIN_SRC bash
+docker compose ps
+#+END_SRC
+You should see the container listed with a status of `running` and (after about thirty seconds) a health status of `healthy`.
+
+*** TODO Inspect the Container Logs to Confirm Startup
+#+BEGIN_SRC bash
+docker compose logs -f bluebeam-mcp
+#+END_SRC
+You should see the same `Model Context Protocol Server running on port 3000` message you saw under Process Manager 2. Press Control-C to exit the log viewer (this does not stop the container, only the log streaming).
+
+*** TODO Verify the Server Is Still Reachable Through Nginx
+Because the container exposes port 3000 on the host's network interface, the existing Nginx configuration requires no changes. Test from your laptop:
+#+BEGIN_SRC bash
+curl https://your-domain.example.com/mcp/sse
+#+END_SRC
+You should see a Server-Sent Events stream begin, identical to before.
+
+*** TODO Test End-to-End Through Claude
+Run through the same tool tests from Phase 4 (list sessions, list documents, extract markups) through your existing Claude connector. No connector changes should be necessary — the public Uniform Resource Locator is unchanged.
+
+*** TODO Document the New Operational Commands
+The day-to-day commands change with the move to Docker. Update your README.md to reflect the new workflow:
+
+| Task                          | Old (Process Manager 2)      | New (Docker)                            |
+|-------------------------------|------------------------------|-----------------------------------------|
+| View live logs                | `pm2 logs bluebeam-mcp`      | `docker compose logs -f bluebeam-mcp`   |
+| Restart the server            | `pm2 restart bluebeam-mcp`   | `docker compose restart bluebeam-mcp`   |
+| Stop the server               | `pm2 stop bluebeam-mcp`      | `docker compose stop`                   |
+| Start the server              | `pm2 start bluebeam-mcp`     | `docker compose up -d`                  |
+| Check status                  | `pm2 status`                 | `docker compose ps`                     |
+| Deploy code changes           | `git pull && pm2 restart`    | `git pull && docker compose up -d --build` |
+
+*** TODO Set Up a Log Rotation Strategy
+By default, Docker accumulates container logs indefinitely, which will eventually fill the MicroSD card. Configure Docker's built-in log rotation by creating or editing `/etc/docker/daemon.json`:
+#+BEGIN_SRC json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+#+END_SRC
+Then restart the Docker daemon for the change to take effect:
+#+BEGIN_SRC bash
+sudo systemctl restart docker
+docker compose up -d
+#+END_SRC
+This caps each container's logs at three files of ten megabytes each (thirty megabytes total per container).
+
+*** TODO Establish a Routine for Updating the Base Image
+The `node:20-alpine` base image receives security patches regularly. Periodically rebuild your image to incorporate these patches:
+#+BEGIN_SRC bash
+cd ~/bluebeam-mcp-server
+docker compose pull
+docker compose build --pull
+docker compose up -d
+#+END_SRC
+The `--pull` flag forces Docker to fetch the latest version of the base image rather than using the cached copy. A monthly or quarterly cadence is reasonable for a low-traffic internal service.
+
+*** TODO Clean Up Unused Docker Resources Periodically
+Over time, old images, stopped containers, and unused volumes accumulate and consume disk space. Run this command every few months to reclaim space:
+#+BEGIN_SRC bash
+docker system prune -a
+#+END_SRC
+Docker will ask for confirmation and list what it will remove. Be cautious: this removes all images not currently in use by a running container, so any locally built images you might want to keep should be running first.
+
+**** TODO Phase 12: Optional Docker Enhancements
+***** TODO Use a Multi-Stage Build to Further Shrink the Image
+A multi-stage Dockerfile separates the build environment (which may include compilers and development tools) from the runtime image. For a pure JavaScript application like this one, the savings are modest but the pattern is worth knowing:
+#+BEGIN_SRC dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+EXPOSE 3000
+CMD ["node", "index.js"]
+#+END_SRC
+
+***** TODO Run the Container as a Non-Root User
+By default, processes inside the container run as root, which is a minor security concern even though the container is isolated from the host. Add these lines before the `CMD` instruction in your Dockerfile:
+#+BEGIN_SRC dockerfile
+RUN addgroup -S app && adduser -S app -G app
+USER app
+#+END_SRC
+You may need to adjust file permissions on the mounted `tokens.json` file so the non-root user can write to it.
+
+***** TODO Set Up Automated Image Builds Using GitHub Actions
+If your repository is on GitHub, you can configure a workflow that automatically builds the Docker image whenever you push to the main branch and publishes it to a container registry such as GitHub Container Registry or Docker Hub. The Raspberry Pi would then pull the prebuilt image rather than building locally, which is faster and consumes fewer resources on the Pi.
+
+Create `.github/workflows/docker-build.yml` in your repository:
+#+BEGIN_SRC yaml
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ghcr.io/yourusername/bluebeam-mcp:latest
+#+END_SRC
+The `platforms: linux/arm64` line is important: it cross-compiles for the Raspberry Pi's ARM architecture rather than the x86_64 architecture of the GitHub Actions runner.
+
+You would then change your `docker-compose.yml` on the Pi to use the prebuilt image rather than building locally:
+#+BEGIN_SRC yaml
+services:
+  bluebeam-mcp:
+    image: ghcr.io/yourusername/bluebeam-mcp:latest
+    container_name: bluebeam-mcp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./tokens.json:/app/tokens.json
+#+END_SRC
+Deployments on the Pi then become simply:
+#+BEGIN_SRC bash
+docker compose pull
+docker compose up -d
+#+END_SRC
+
+***** TODO Add a Container Update Automation Tool
+Watchtower is a small companion container that monitors your running containers and automatically pulls updated images and restarts the containers when new versions are published. This pairs naturally with the GitHub Actions workflow above.
+
+Add Watchtower to your `docker-compose.yml`:
+#+BEGIN_SRC yaml
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=3600
+      - WATCHTOWER_CLEANUP=true
+    command: bluebeam-mcp
+#+END_SRC
+The `WATCHTOWER_POLL_INTERVAL=3600` setting checks for updates every hour. The `WATCHTOWER_CLEANUP=true` setting removes old images after a successful update to prevent disk space accumulation. The `command: bluebeam-mcp` argument restricts Watchtower to monitoring only that one container rather than every container on the host.
+
+Note that automated updates carry some risk: if a new image is broken, your service goes down without warning. For a low-traffic internal service this is usually acceptable, but for anything more critical you may prefer manual updates so you can verify each release.
+
+***** TODO Configure Resource Limits on the Container
+If you eventually run other services on the same Raspberry Pi, you may want to prevent the Model Context Protocol server from consuming all available memory or central processing unit time. Add limits to your `docker-compose.yml`:
+#+BEGIN_SRC yaml
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          memory: 128M
+#+END_SRC
+These values cap the container at half a central processing unit core and two hundred fifty-six megabytes of memory, which is more than sufficient for this workload. Adjust based on observed usage from `docker stats`.
+
+***** TODO Consider Migrating to a More Powerful Host
+Once containerized, the application is portable to any system that runs Docker. If the Raspberry Pi proves underpowered or unreliable, you can move the deployment to a small cloud virtual machine (such as a five-dollar-per-month instance from a provider like DigitalOcean, Linode, or Hetzner) with minimal effort: install Docker on the new host, copy `.env` and `tokens.json` over via Secure Copy Protocol, run `docker compose up -d`, and repoint your domain name. This portability is arguably the single greatest practical benefit of having containerized the application.
+
+
+
+
+
+
+
+
+
+
+
+
