@@ -1,3 +1,4 @@
+
 #+TITLE: Bluebeam MCP Project
 #+AUTHOR: Rory Hamaoka
 #+EMAIL: rhamoaka@lbl.go
@@ -14,62 +15,25 @@
   - [[#design-decision-4-authentication-and-secrets-management][Design Decision 4: Authentication and Secrets Management]]
 - [[#information-needed][Information Needed]]
 - [[#detailed-work-breakdown][Detailed Work Breakdown]]
-- [[#phase-1-local-development-environment-setup-laptop][Phase 1: Local Development Environment Setup (Laptop)]]
-  - [[#install-nodejs-and-git-on-the-local-machine][Install Node.js and Git on the local machine.]]
-  - [[#create-a-new-project-directory-and-initialize-it-with-npm][Create a new project directory and initialize it with npm.]]
-  - [[#install-required-nodejs-dependencies-express-http-client-mcp-sdk-dotenv][Install required Node.js dependencies (Express, HTTP client, MCP SDK, dotenv).]]
-  - [[#initialize-a-local-git-repository-for-the-project][Initialize a local Git repository for the project.]]
-- [[#phase-2-bluebeam-authentication-logic-laptop][Phase 2: Bluebeam Authentication Logic (Laptop)]]
-  - [[#create-a-hidden-env-file-to-securely-store-the-bluebeam-client-id-and-client-secret][Create a hidden .env file to securely store the Bluebeam Client ID and Client Secret.]]
-  - [[#write-a-temporary-script-to-generate-the-initial-oauth-20-authorization-url][Write a temporary script to generate the initial OAuth 2.0 authorization URL.]]
-  - [[#navigate-to-the-generated-url-and-log-in-using-the-shared-bb-devlblgov-account-to-retrieve-the-authorization-code][Navigate to the generated URL and log in using the shared bb-dev@lbl.gov account to retrieve the authorization code.]]
-  - [[#write-a-function-to-exchange-the-authorization-code-for-an-access-token-and-a-refresh-token][Write a function to exchange the authorization code for an Access Token and a Refresh Token.]]
-  - [[#configure-the-application-to-save-the-resulting-tokens-into-a-local-json-file][Configure the application to save the resulting tokens into a local JSON file.]]
-  - [[#implement-the-token-refresh-logic-to-automatically-fetch-and-save-a-new-access-token-whenever-the-current-one-expires][Implement the token refresh logic to automatically fetch and save a new Access Token whenever the current one expires.]]
-- [[#phase-3-core-server-logic-and-mcp-tool-definition-laptop][Phase 3: Core Server Logic and MCP Tool Definition (Laptop)]]
-  - [[#configure-the-express-framework-to-accept-incoming-http-post-requests][Configure the Express framework to accept incoming HTTP POST requests.]]
-  - [[#implement-the-server-sent-events-sse-connection-logic-required-by-the-model-context-protocol][Implement the Server-Sent Events (SSE) connection logic required by the Model Context Protocol.]]
-  - [[#define-the-mcp-tool-to-query-and-list-available-bluebeam-studio-sessions][Define the MCP tool to query and list available Bluebeam Studio Sessions.]]
-  - [[#define-the-mcp-tool-to-retrieve-the-document-list-for-a-specified-session-id][Define the MCP tool to retrieve the document list for a specified session ID.]]
-  - [[#define-the-mcp-tool-to-extract-markups-and-comments-from-a-specified-document-id-using-the-active-access-token][Define the MCP tool to extract markups and comments from a specified document ID using the active access token.]]
-- [[#phase-4-local-and-end-to-end-testing-laptop][Phase 4: Local and End-to-End Testing (Laptop)]]
-  - [[#use-a-local-api-developer-tool-to-send-mock-requests-to-the-express-server-to-verify-bluebeam-data-retrieval-and-token-refreshing][Use a local API developer tool to send mock requests to the Express server to verify Bluebeam data retrieval and token refreshing.]]
-  - [[#run-a-temporary-tunneling-service-such-as-ngrok-on-the-laptop-to-expose-the-local-server-to-a-public-https-address][Run a temporary tunneling service (such as Ngrok) on the laptop to expose the local server to a public HTTPS address.]]
-  - [[#update-the-atlassian-forge-project-configuration-to-point-the-rovo-agent-to-this-temporary-public-address][Update the Atlassian Forge project configuration to point the Rovo Agent to this temporary public address.]]
-  - [[#test-the-full-end-to-end-integration-by-asking-the-atlassian-rovo-agent-to-retrieve-comments-from-the-workspace][Test the full end-to-end integration by asking the Atlassian Rovo Agent to retrieve comments from the workspace.]]
-- [[#phase-5-permanent-network-routing-setup-raspberry-pi-5][Phase 5: Permanent Network Routing Setup (Raspberry Pi 5)]]
-  - [[#create-a-minimal-hello-world-express-application-on-the-raspberry-pi-to-test-routing][Create a minimal "Hello World" Express application on the Raspberry Pi to test routing.]]
-  - [[#configure-the-cloudflare-tunnel-to-route-the-chosen-subdomain-to-the-nginx-web-server][Configure the Cloudflare Tunnel to route the chosen subdomain to the Nginx web server.]]
-  - [[#update-the-nginx-configuration-to-forward-traffic-from-the-subdomain-to-the-local-port-of-the-test-application][Update the Nginx configuration to forward traffic from the subdomain to the local port of the test application.]]
-  - [[#modify-the-nginx-configuration-for-this-specific-route-to-disable-proxy-buffering-and-remove-read-timeouts-to-support-continuous-sse-streams][Modify the Nginx configuration for this specific route to disable proxy buffering and remove read timeouts to support continuous SSE streams.]]
-  - [[#access-the-subdomain-from-an-external-network-to-verify-traffic-correctly-reaches-the-test-application][Access the subdomain from an external network to verify traffic correctly reaches the test application.]]
-- [[#phase-6-deployment-via-github-laptop-to-raspberry-pi][Phase 6: Deployment via GitHub (Laptop to Raspberry Pi)]]
-  - [[#add-the-env-file-and-the-json-token-file-to-the-gitignore-configuration-on-the-laptop][Add the .env file and the JSON token file to the .gitignore configuration on the laptop.]]
-  - [[#commit-the-completed-codebase-and-push-it-to-a-private-github-repository][Commit the completed codebase and push it to a private GitHub repository.]]
-  - [[#log-into-the-raspberry-pi-and-clone-the-private-repository-from-github][Log into the Raspberry Pi and clone the private repository from GitHub.]]
-  - [[#run-the-npm-install-command-inside-the-raspberry-pi-project-directory-to-download-the-dependencies][Run the npm install command inside the Raspberry Pi project directory to download the dependencies.]]
-  - [[#securely-transfer-the-env-file-and-the-active-json-token-file-directly-from-the-laptop-to-the-raspberry-pi-over-the-local-network][Securely transfer the .env file and the active JSON token file directly from the laptop to the Raspberry Pi over the local network.]]
-- [[#phase-7-production-launch-and-final-testing-raspberry-pi][Phase 7: Production Launch and Final Testing (Raspberry Pi)]]
-  - [[#install-the-pm2-process-manager-globally-on-the-raspberry-pi][Install the PM2 process manager globally on the Raspberry Pi.]]
-  - [[#start-the-nodejs-application-using-pm2-to-ensure-it-runs-continuously-in-the-background][Start the Node.js application using PM2 to ensure it runs continuously in the background.]]
-  - [[#replace-the-temporary-tunneling-address-in-the-atlassian-forge-configuration-with-the-permanent-cloudflare-subdomain][Replace the temporary tunneling address in the Atlassian Forge configuration with the permanent Cloudflare subdomain.]]
-  - [[#issue-a-final-natural-language-query-to-the-atlassian-rovo-agent-to-confirm-the-production-server-successfully-extracts-and-streams-bluebeam-comments][Issue a final natural language query to the Atlassian Rovo Agent to confirm the production server successfully extracts and streams Bluebeam comments.]]
-- [[#detailed-work-breakdown-1][Detailed Work Breakdown]]
-- [[#phase-1-local-development-environment-setup-laptop-1][Phase 1: Local Development Environment Setup (Laptop)]]
-  - [[#install-nodejs-and-git-on-the-local-machine-1][Install Node.js and Git on the Local Machine]]
+- [[#phase-1-local-development-environment-setup-laptop][PHASE 1: LOCAL DEVELOPMENT ENVIRONMENT SETUP (LAPTOP)]]
+  - [[#install-nodejs-and-git-on-the-local-machine][Install Node.js and Git on the Local Machine]]
   - [[#create-a-new-project-directory-and-initialize-it-with-node-package-manager][Create a New Project Directory and Initialize it with Node Package Manager]]
   - [[#install-required-nodejs-dependencies][Install Required Node.js Dependencies]]
-  - [[#initialize-a-local-git-repository-for-the-project-1][Initialize a Local Git Repository for the Project]]
-- [[#phase-2-bluebeam-authentication-logic-laptop-1][Phase 2: Bluebeam Authentication Logic (Laptop)]]
+  - [[#initialize-a-local-git-repository-for-the-project][Initialize a Local Git Repository for the Project]]
+- [[#phase-2-bluebeam-authentication-logic-laptop][Phase 2: Bluebeam Authentication Logic (Laptop)]]
   - [[#create-a-hidden-environment-file-to-securely-store-the-bluebeam-client-identifier-and-client-secret][Create a Hidden Environment File to Securely Store the Bluebeam Client Identifier and Client Secret]]
-  - [[#write-a-temporary-script-to-generate-the-initial-open-authorization-20-authorization-uniform-resource-locator][Write a Temporary Script to Generate the Initial Open Authorization 2.0 Authorization Uniform Resource Locator]]
-  - [[#retrieve-the-authorization-code-using-the-shared-account][Retrieve the Authorization Code Using the Shared Account]]
-  - [[#write-a-function-to-exchange-the-authorization-code-for-tokens-and-save-them][Write a Function to Exchange the Authorization Code for Tokens and Save Them]]
+  - [[#write-a-temporary-script-to-generate-the-initial-open-authorization-20-authorization-uniform-resource-locator---not-used-authorized-in-postman][Write a Temporary Script to Generate the Initial Open Authorization 2.0 Authorization Uniform Resource Locator - NOT USED. AUTHORIZED IN POSTMAN]]
+  - [[#retrieve-the-authorization-code-using-the-shared-account---not-used-authroized-in-postman][Retrieve the Authorization Code Using the Shared Account - NOT USED. AUTHROIZED IN POSTMAN]]
+  - [[#write-a-function-to-exchange-the-authorization-code-for-tokens-and-save-them---not-used-authorized-in-postman][Write a Function to Exchange the Authorization Code for Tokens and Save Them - NOT USED. AUTHORIZED IN POSTMAN]]
   - [[#implement-the-token-refresh-logic][Implement the Token Refresh Logic]]
 - [[#phase-3-core-server-logic-and-model-context-protocol-tool-definition-laptop][Phase 3: Core Server Logic and Model Context Protocol Tool Definition (Laptop)]]
   - [[#configure-express-and-implement-the-server-sent-events-connection-logic][Configure Express and Implement the Server-Sent Events Connection Logic]]
+    - [[#indexjs-depreciated-old-sseservertransport][Index.js: Depreciated Old SSEServerTransport]]
+    - [[#indexjs-depreciated-streamable-http-transport][Index.js: Depreciated Streamable Http transport]]
+    - [[#indexjs-refactored-in-advance-of-rovo-port][Index.js: Refactored in advance of Rovo port]]
+    - [[#mcp-toolsjs-model-context-protocol-formatting][Mcp-tools.js Model Context Protocol formatting]]
   - [[#define-the-model-context-protocol-tools-for-bluebeam-inside-indexjs][Define the Model Context Protocol Tools for Bluebeam Inside index.js]]
-- [[#phase-4-local-and-end-to-end-testing-laptop-1][Phase 4: Local and End-to-End Testing (Laptop)]]
+- [[#phase-4-local-and-end-to-end-testing-laptop][Phase 4: Local and End-to-End Testing (Laptop)]]
   - [[#run-the-server-locally-and-confirm-it-starts-without-errors][Run the Server Locally and Confirm It Starts Without Errors]]
   - [[#install-ngrok-to-expose-the-local-server-to-the-public-internet][Install Ngrok to Expose the Local Server to the Public Internet]]
   - [[#start-an-ngrok-tunnel-to-port-3000][Start an Ngrok Tunnel to Port 3000]]
@@ -205,7 +169,6 @@ To make this work securely with Bluebeam's system, you will perform a one-time m
 
 From that point forward, your server operates completely in the background. You will store your existing Client ID and Client Secret safely in a hidden .env text file on your Raspberry Pi, keeping them entirely out of your application's source code. Whenever the Atlassian Rovo agent requests document comments, your Express server will check if its current Bluebeam Access Token has expired. If it has, the server will automatically use the hidden Client credentials and the saved Refresh Token to silently fetch a new Access Token, update the local JSON file, and immediately proceed with fetching the requested data.
 
-
 * Information Needed 
 Here is the ordered list summarizing all the required information, credentials, software, and their associated costs:
 
@@ -217,60 +180,9 @@ Here is the ordered list summarizing all the required information, credentials, 
 - Token Management Storage: Your server will require a simple local JSON file to save the Bluebeam Access and Refresh tokens, and a hidden .env text file to safely store your Client Secret. These are simply standard text files managed by your operating system, so they cost nothing to implement.
 Atlassian Cloud Workspace: You must have an Atlassian Forge developer account and access to the Atlassian Rovo Agent platform to configure the AI client. While building and testing Forge apps is free for developers, using Rovo in production requires your organization to maintain its existing paid Atlassian enterprise licenses.
 
-
 * Detailed Work Breakdown
-
-* TODO Phase 1: Local Development Environment Setup (Laptop)
-** TODO Install Node.js and Git on the local machine.
-** TODO Create a new project directory and initialize it with npm.
-** TODO Install required Node.js dependencies (Express, HTTP client, MCP SDK, dotenv).
-** TODO Initialize a local Git repository for the project.
-
-* TODO Phase 2: Bluebeam Authentication Logic (Laptop)
-** TODO Create a hidden .env file to securely store the Bluebeam Client ID and Client Secret.
-** TODO Write a temporary script to generate the initial OAuth 2.0 authorization URL.
-** TODO Navigate to the generated URL and log in using the shared bb-dev@lbl.gov account to retrieve the authorization code.
-** TODO Write a function to exchange the authorization code for an Access Token and a Refresh Token.
-** TODO Configure the application to save the resulting tokens into a local JSON file.
-** TODO Implement the token refresh logic to automatically fetch and save a new Access Token whenever the current one expires.
-
-* TODO Phase 3: Core Server Logic and MCP Tool Definition (Laptop)
-** TODO Configure the Express framework to accept incoming HTTP POST requests.
-** TODO Implement the Server-Sent Events (SSE) connection logic required by the Model Context Protocol.
-** TODO Define the MCP tool to query and list available Bluebeam Studio Sessions.
-** TODO Define the MCP tool to retrieve the document list for a specified session ID.
-** TODO Define the MCP tool to extract markups and comments from a specified document ID using the active access token.
-
-* TODO Phase 4: Local and End-to-End Testing (Laptop)
-** TODO Use a local API developer tool to send mock requests to the Express server to verify Bluebeam data retrieval and token refreshing.
-** TODO Run a temporary tunneling service (such as Ngrok) on the laptop to expose the local server to a public HTTPS address.
-** TODO Update the Atlassian Forge project configuration to point the Rovo Agent to this temporary public address.
-** TODO Test the full end-to-end integration by asking the Atlassian Rovo Agent to retrieve comments from the workspace.
-
-* TODO Phase 5: Permanent Network Routing Setup (Raspberry Pi 5)
-** TODO Create a minimal "Hello World" Express application on the Raspberry Pi to test routing.
-** TODO Configure the Cloudflare Tunnel to route the chosen subdomain to the Nginx web server.
-** TODO Update the Nginx configuration to forward traffic from the subdomain to the local port of the test application.
-** TODO Modify the Nginx configuration for this specific route to disable proxy buffering and remove read timeouts to support continuous SSE streams.
-** TODO Access the subdomain from an external network to verify traffic correctly reaches the test application.
-
-* TODO Phase 6: Deployment via GitHub (Laptop to Raspberry Pi)
-** TODO Add the .env file and the JSON token file to the .gitignore configuration on the laptop.
-** TODO Commit the completed codebase and push it to a private GitHub repository.
-** TODO Log into the Raspberry Pi and clone the private repository from GitHub.
-** TODO Run the npm install command inside the Raspberry Pi project directory to download the dependencies.
-** TODO Securely transfer the .env file and the active JSON token file directly from the laptop to the Raspberry Pi over the local network.
-
-* TODO Phase 7: Production Launch and Final Testing (Raspberry Pi)
-** TODO Install the PM2 process manager globally on the Raspberry Pi.
-** TODO Start the Node.js application using PM2 to ensure it runs continuously in the background.
-** TODO Replace the temporary tunneling address in the Atlassian Forge configuration with the permanent Cloudflare subdomain.
-** TODO Issue a final natural language query to the Atlassian Rovo Agent to confirm the production server successfully extracts and streams Bluebeam comments.
-
-
-* Detailed Work Breakdown
-* TODO Phase 1: Local Development Environment Setup (Laptop)
-** TODO Install Node.js and Git on the Local Machine
+* DONE PHASE 1: LOCAL DEVELOPMENT ENVIRONMENT SETUP (LAPTOP)
+** DONE Install Node.js and Git on the Local Machine
 Verify installations by running the following commands in your terminal:
 #+BEGIN_SRC bash
 node -v
@@ -279,34 +191,71 @@ git --version
 #+END_SRC
 Node.js should be version 18 or higher for compatibility with the Model Context Protocol Software Development Kit.
 
-** TODO Create a New Project Directory and Initialize it with Node Package Manager
-#+BEGIN_SRC bash
-mkdir bluebeam-mcp-server
-cd bluebeam-mcp-server
+** DONE Create a New Project Directory and Initialize it with Node Package Manager
+#+BEGIN_SRC bash :results output drawer
+mkdir mcp-bbstudio
+cd mcp-bbstudio
 npm init -y
 #+END_SRC
 
-** TODO Install Required Node.js Dependencies
+#+RESULTS:
+| Wrote          | to              | /home/rory/projects/mcp-bbstudio/mcp-bbstudio/package.json: |    |      |             |    |      |    |
+|                |                 |                                                             |    |      |             |    |      |    |
+| {              |                 |                                                             |    |      |             |    |      |    |
+| "name":        | "mcp-bbstudio", |                                                             |    |      |             |    |      |    |
+| "version":     | "1.0.0",        |                                                             |    |      |             |    |      |    |
+| "main":        | "index.js",     |                                                             |    |      |             |    |      |    |
+| "scripts":     | {               |                                                             |    |      |             |    |      |    |
+| "test":        | "echo           | \"Error:                                                    | no | test | specified\" | && | exit | 1" |
+| },             |                 |                                                             |    |      |             |    |      |    |
+| "keywords":    | [],             |                                                             |    |      |             |    |      |    |
+| "author":      | "",             |                                                             |    |      |             |    |      |    |
+| "license":     | "ISC",          |                                                             |    |      |             |    |      |    |
+| "description": |                 |                                                             |    |      |             |    |      |    |
+| }              |                 |                                                             |    |      |             |    |      |    |
+|                |                 |                                                             |    |      |             |    |      |    |
+|                |                 |                                                             |    |      |             |    |      |    |
+|                |                 |                                                             |    |      |             |    |      |    |
+
+** DONE Install Required Node.js Dependencies
 Install Express for the web server, Axios for Hypertext Transfer Protocol requests, dotenv for managing secrets, and the Model Context Protocol Software Development Kit.
-#+BEGIN_SRC bash
+#+BEGIN_SRC bash :results output drawer
 npm install express axios dotenv @modelcontextprotocol/sdk
 #+END_SRC
 
-** TODO Initialize a Local Git Repository for the Project
+#+RESULTS:
+:results:
+
+added 106 packages in 4s
+
+33 packages are looking for funding
+  run `npm fund` for details
+:end:
+
+** DONE Initialize a Local Git Repository for the Project
 #+BEGIN_SRC bash
 git init
 #+END_SRC
 
-* TODO Phase 2: Bluebeam Authentication Logic (Laptop)
-** TODO Create a Hidden Environment File to Securely Store the Bluebeam Client Identifier and Client Secret
-Create a file named `.env` in the root directory:
-#+BEGIN_SRC text
+* DONE Phase 2: Bluebeam Authentication Logic (Laptop)
+project/
+├── .env
+├── .gitignore
+├── tokens.json          ← seeded once from Postman, then self-maintaining
+├── package.json
+├── auth-manager.js      ← the module from your plan
+├── bluebeam-client.js   ← wraps API calls, uses auth-manager
+├── sync-sessions.js     ← business logic, uses bluebeam-client
+└── index.js             ← entry point, schedules sync-sessions
+** DONE Create a Hidden Environment File to Securely Store the Bluebeam Client Identifier and Client Secret
+Create a file named `.env` in the root directory (the same directory has contains the package.json):
+#+BEGIN_SRC bash
 BLUEBEAM_CLIENT_ID=your_client_id_here
 BLUEBEAM_CLIENT_SECRET=your_client_secret_here
 REDIRECT_URI=http://localhost:3000/callback
 #+END_SRC
 
-** TODO Write a Temporary Script to Generate the Initial Open Authorization 2.0 Authorization Uniform Resource Locator
+** DONE Write a Temporary Script to Generate the Initial Open Authorization 2.0 Authorization Uniform Resource Locator - NOT USED. AUTHORIZED IN POSTMAN
 Create `generate-auth.js`. The `scope` parameter is required by Bluebeam to grant access to the Studio Application Programming Interface:
 #+BEGIN_SRC javascript
 require('dotenv').config();
@@ -320,13 +269,13 @@ const authUrl = `https://authserver.bluebeam.com/auth/oauth/authorize?${params.t
 console.log("Navigate to this URL in your browser:", authUrl);
 #+END_SRC
 
-** TODO Retrieve the Authorization Code Using the Shared Account
+** DONE Retrieve the Authorization Code Using the Shared Account - NOT USED. AUTHROIZED IN POSTMAN
 1. Run `node generate-auth.js`.
 2. Open the printed Uniform Resource Locator in a browser.
 3. Log in with `bb-dev@lbl.gov`.
 4. The browser will redirect to `http://localhost:3000/callback?code=AUTH_CODE_HERE`. The page will fail to load (because no server is running there yet), but copy the code value from the address bar.
 
-** TODO Write a Function to Exchange the Authorization Code for Tokens and Save Them
+** DONE Write a Function to Exchange the Authorization Code for Tokens and Save Them - NOT USED. AUTHORIZED IN POSTMAN
 Create `get-tokens.js` and paste your copied code into the script. Notice that we add a calculated `expires_at` timestamp to make refresh logic reliable:
 #+BEGIN_SRC javascript
 require('dotenv').config();
@@ -335,7 +284,7 @@ const fs = require('fs');
 
 async function fetchTokens(authCode) {
   const credentials = Buffer.from(
-    `$${process.env.BLUEBEAM_CLIENT_ID}:$${process.env.BLUEBEAM_CLIENT_SECRET}`
+    `${process.env.BLUEBEAM_CLIENT_ID}:${process.env.BLUEBEAM_CLIENT_SECRET}`
   ).toString('base64');
 
   const body = new URLSearchParams({
@@ -345,7 +294,7 @@ async function fetchTokens(authCode) {
   });
 
   const response = await axios.post(
-    'https://authserver.bluebeam.com/auth/oauth/token',
+    'https://api.bluebeam.com/oauth2/token',
     body.toString(),
     {
       headers: {
@@ -366,9 +315,22 @@ fetchTokens('PASTE_AUTH_CODE_HERE');
 #+END_SRC
 Run `node get-tokens.js`.
 
-** TODO Implement the Token Refresh Logic
+** DONE Implement the Token Refresh Logic
+Create tokens.json to hold authorizations from postman
+#+BEGIN_SRC json
+{
+"access_token": "PASTE_ACCESS_TOKEN",
+"refresh_token": "PASTE_REFRESH_TOKEN",
+"token_type": "Bearer",
+"expires_in": 3600,
+"expires_at": 0
+}
+
+#+END_SRC
+
+
 Create `auth-manager.js` to handle loading and refreshing tokens automatically based on the stored expiration timestamp:
-#+BEGIN_SRC javascript
+#+BEGIN_SRC js
 const fs = require('fs');
 const axios = require('axios');
 require('dotenv').config();
@@ -382,7 +344,7 @@ async function getValidToken() {
 
   // Token expired, refresh it
   const credentials = Buffer.from(
-    `$${process.env.BLUEBEAM_CLIENT_ID}:$${process.env.BLUEBEAM_CLIENT_SECRET}`
+    `${process.env.BLUEBEAM_CLIENT_ID}:${process.env.BLUEBEAM_CLIENT_SECRET}`
   ).toString('base64');
 
   const body = new URLSearchParams({
@@ -412,10 +374,41 @@ async function getValidToken() {
 module.exports = { getValidToken };
 #+END_SRC
 
-* TODO Phase 3: Core Server Logic and Model Context Protocol Tool Definition (Laptop)
-** TODO Configure Express and Implement the Server-Sent Events Connection Logic
+Test with:
+#+begin_src sh :results output
+node test-auth.js
+#+end_src
+
+#+begin_src sh :results output
+node test-auth-endpoint.js
+#+end_src
+
+#+RESULTS:
+: ◇ injected env (3) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+: {
+:   '$id': '1',
+:   UserId: 3898632,
+:   Email: 'bb-dev@lbl.gov',
+:   DisplayName: 'LBNL Fac Dev Team',
+:   UserRole: []
+: }
+
+* DONE Phase 3: Core Server Logic and Model Context Protocol Tool Definition (Laptop)
+The two HTTP endpoints serve fundamentally different purposes. The GET /mcp/sse endpoint opens a long-lived connection that stays open for the entire Claude conversation — the server pushes results to Claude through this stream. The POST /mcp/messages endpoint receives short-lived requests from Claude whenever it wants to invoke a tool. Both endpoints feed into the same transport instance, which is why a single transport variable is shared between them in the code.
+
+The Model Context Protocol Software Development Kit handles all the protocol details for you. Your code only registers two handlers (one for listing tools, one for calling them) and the SDK takes care of the JSON-RPC framing, message routing, error handling, and Server-Sent Events formatting.
+
+The authentication layer is intentionally isolated in its own module. Every tool invocation goes through getValidToken(), which means token refresh logic runs at most once per tool call and is centralized in one place. If Bluebeam ever changes its authentication scheme, you change one file.
+
+The Bluebeam Studio Application Programming Interface is the only external dependency that actually executes business logic. Everything else in the diagram is either glue code or infrastructure. This is a good sign architecturally — it means the system is mostly thin plumbing around a well-defined external service.
+
+** DONE Configure Express and Implement the Server-Sent Events Connection Logic
 Create `index.js`. Note that the message endpoint must NOT use `express.json()` middleware, as the transport parses the body itself:
-#+BEGIN_SRC javascript
+NOTE that I have changed to streamable http, that uses express.json() per the 2026 documenation.
+*** Index.js: Depreciated Old SSEServerTransport
+SSEServerTransport is the older design. It uses two endpoints — a long-lived GET that opens a Server-Sent Events stream, and a separate POST endpoint that receives client messages. This is what the original Phase 3 code implemented. It still works but is being deprecated in favor of the newer transport.
+NOTE: I have revised to a more modern streamable http parsed json using express.json middleware. 
+#+BEGIN_SRC javascript - OLD SSEServerTramsport that cannot have parsed json
 const express = require('express');
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { SSEServerTransport } = require('@modelcontextprotocol/sdk/server/sse.js');
@@ -450,33 +443,413 @@ app.post('/mcp/messages', async (req, res) => {
 });
 #+END_SRC
 
-** TODO Define the Model Context Protocol Tools for Bluebeam Inside index.js
+*** Index.js: Depreciated Streamable Http transport
+StreamableHTTPServerTransport is the current recommended design. It uses a single endpoint that handles both POST (for client-to-server messages) and GET (for the server-to-client stream), with session management via a Mcp-Session-Id header. It supports stateful sessions, resumability, and is generally more robust.
+#+BEGIN_SRC js - Using express() as streamable http response requires parsed json
+const express = require('express');
+const { randomUUID } = require('node:crypto');
+const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
+const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
+const {
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  isInitializeRequest
+} = require('@modelcontextprotocol/sdk/types.js');
+const { getValidToken } = require('./auth-manager');
+const axios = require('axios');
+
+const app = express();
+app.use(express.json());
+
+const server = new Server(
+  { name: "bluebeam-mcp", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+let transport;
+
+app.post('/mcp', async (req, res) => {
+  if (!transport && isInitializeRequest(req.body)) {
+    transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID()
+    });
+    transport.onclose = () => { transport = undefined; };
+    await server.connect(transport);
+  } else if (!transport) {
+    res.status(400).json({
+      jsonrpc: '2.0',
+      error: { code: -32000, message: 'Server not initialized' },
+      id: null
+    });
+    return;
+  }
+
+  await transport.handleRequest(req, res, req.body);
+});
+
+const handleSessionRequest = async (req, res) => {
+  if (!transport) {
+    res.status(400).send('Server not initialized');
+    return;
+  }
+  await transport.handleRequest(req, res);
+};
+
+app.get('/mcp', handleSessionRequest);
+app.delete('/mcp', handleSessionRequest);
+
+#+END_SRC
+
+*** Index.js: Refactored in advance of Rovo port
+Discarded in rovo port. Creates teh MCP server isntance, wire up the stdio transport and calls regiserHandlers(server) from mcp-tools.js 
+#+begin_src js
+const express = require('express');
+const { randomuuid } = require('node:crypto');
+const { server } = require('@modelcontextprotocol/sdk/server/index.js');
+const {
+  streamablehttpservertransport
+} = require('@modelcontextprotocol/sdk/server/streamablehttp.js');
+const { isinitializerequest } = require('@modelcontextprotocol/sdk/types.js');
+
+const { registerhandlers } = require('./mcp-tools');
+
+const app = express();
+app.use(express.json());
+
+// map of active sessions keyed by mcp-session-id header value.
+// each entry holds the transport instance dedicated to that session.
+const transports = {};
+
+/**
+ * handles all mcp requests on a single endpoint. the streamable http
+ * transport multiplexes initialization, client-to-server messages,
+ * and server-to-client streams over post and get to /mcp.
+ */
+app.post('/mcp', async (req, res) => {
+  const sessionid = req.headers['mcp-session-id'];
+  let transport;
+
+  if (sessionid && transports[sessionid]) {
+    // reuse existing transport for this session.
+    transport = transports[sessionid];
+  } else if (!sessionid && isinitializerequest(req.body)) {
+    // new initialization request — create a fresh transport and server.
+    transport = new streamablehttpservertransport({
+      sessionidgenerator: () => randomuuid(),
+      onsessioninitialized: (newsessionid) => {
+        transports[newsessionid] = transport;
+      }
+    });
+
+    // clean up when the transport closes.
+    transport.onclose = () => {
+      if (transport.sessionid) {
+        delete transports[transport.sessionid];
+      }
+    };
+
+    const server = new server(
+      { name: 'bluebeam-mcp', version: '1.0.0' },
+      { capabilities: { tools: {} } }
+    );
+    registerhandlers(server);
+    await server.connect(transport);
+  } else {
+    // request lacks a valid session id and is not an initialization request.
+    res.status(400).json({
+      jsonrpc: '2.0',
+      error: {
+        code: -32000,
+        message: 'bad request: no valid session id provided'
+      },
+      id: null
+    });
+    return;
+  }
+
+  await transport.handlerequest(req, res, req.body);
+});
+
+/**
+ * get and delete on /mcp are used by the transport for the server-to-client
+ * stream and for session (mcp connection session, not bluebeam session) termination, respectively. both require an existing
+ * session id.
+ */
+const handlesessionrequest = async (req, res) => {
+  const sessionid = req.headers['mcp-session-id'];
+  if (!sessionid || !transports[sessionid]) {
+    res.status(400).send('invalid or missing session id');
+    return;
+  }
+  const transport = transports[sessionid];
+  await transport.handlerequest(req, res);
+};
+
+app.get('/mcp', handlesessionrequest);
+app.delete('/mcp', handlesessionrequest);
+
+app.listen(3000, () => {
+  console.log('model context protocol server (streamable http) running on port 3000');
+});
+
+
+#+end_src
+
+*** Mcp-tools.js Model Context Protocol formatting
+   Mcp-tools.js is discarded when porting to rovo. Owns the tool definations, the dispatch table, the axios calls to blubeam public api, and error handling. Imports getValidToken from auth-manager.js
+.
+   #+begin_src js
+
+const axios = require('axios');
+const {
+  ListToolsRequestSchema,
+  CallToolRequestSchema
+} = require('@modelcontextprotocol/sdk/types.js');
+
+const { getValidToken } = require('./auth-manager');
+
+const API_HOST = 'https://api.bluebeam.com/publicapi';
+
+/**
+ * Removes undefined and null values from a parameters object so that
+ * axios does not serialize them as empty query string entries.
+ */
+const cleanParams = (obj = {}) =>
+  Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
+  );
+
+/**
+ * Builds a detailed, log-friendly error message from an axios error,
+ * including the status code, the request URL, and the response body
+ * when available. Falls back to a plain message for non-HTTP errors.
+ */
+const formatAxiosError = (e) => {
+  let errorMessage = `Error: ${e.message}`;
+
+  if (e.response) {
+    errorMessage += `\nStatus: ${e.response.status} ${e.response.statusText || ''}`.trim();
+    errorMessage += `\nURL: ${e.config?.method?.toUpperCase()} ${e.config?.url}`;
+    if (e.response.data) {
+      const body = typeof e.response.data === 'string'
+        ? e.response.data
+        : JSON.stringify(e.response.data, null, 2);
+      errorMessage += `\nResponse body: ${body}`;
+    }
+  } else if (e.request) {
+    errorMessage += `\nNo response received from ${e.config?.url}`;
+  }
+
+  return errorMessage;
+};
+
+/**
+ * Tool schema definitions exposed to Model Context Protocol clients.
+ * Each entry describes one Bluebeam Studio API operation the server supports.
+ */
+const TOOL_DEFINITIONS = [
+  {
+    name: 'get_sessions',
+    description: 'List all Bluebeam Studio sessions the authenticated user owns or is attending',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        orderby: { type: 'string', description: 'Field to order results by' },
+        offset: { type: 'integer', description: 'Number of records to skip for pagination' },
+        limit: { type: 'integer', description: 'Maximum number of records to return' },
+        includeDeleted: { type: 'boolean', description: 'Whether to include deleted sessions' },
+        ownedOrAttending: {
+          type: 'string',
+          description: "Filter by ownership: 'Owned', 'Attending', or both"
+        }
+      }
+    }
+  },
+  {
+    name: 'get_session_docs',
+    description: 'List documents (files) within a specified Bluebeam Studio session',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sessionId: { type: 'string', description: 'The Studio session ID' },
+        offset: { type: 'integer', description: 'Number of records to skip for pagination' },
+        limit: { type: 'integer', description: 'Maximum number of records to return' },
+        includeDeleted: { type: 'boolean', description: 'Whether to include deleted files' }
+      },
+      required: ['sessionId']
+    }
+  },
+  {
+    name: 'get_doc_comments',
+    description: 'Return a detailed list of markups (comments) on a specific session document',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sessionId: { type: 'string', description: 'The Studio session ID' },
+        docId: { type: 'string', description: 'The file (document) ID within the session' },
+        offset: { type: 'integer', description: 'Number of records to skip for pagination' },
+        limit: { type: 'integer', description: 'Maximum number of records to return' }
+      },
+      required: ['sessionId', 'docId']
+    }
+  },
+  {
+    name: 'get_doc_comment_statuses',
+    description: 'Return the list of valid statuses for markups on a session document',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sessionId: { type: 'string', description: 'The Studio session ID' },
+        docId: { type: 'string', description: 'The file (document) ID within the session' }
+      },
+      required: ['sessionId', 'docId']
+    }
+  }
+];
+
+/**
+ * Dispatch table mapping a tool name to the function that executes it.
+ * Each handler receives the tool arguments and the Authorization headers
+ * object, and returns the raw axios response data.
+ */
+const TOOL_HANDLERS = {
+  get_sessions: async (args, headers) => {
+    const { orderby, offset, limit, includeDeleted, ownedOrAttending } = args;
+    const res = await axios.get(`${API_HOST}/v1/sessions`, {
+      headers,
+      params: cleanParams({ orderby, offset, limit, includeDeleted, ownedOrAttending })
+    });
+    return res.data;
+  },
+
+  get_session_docs: async (args, headers) => {
+    const { sessionId, offset, limit, includeDeleted } = args;
+    const res = await axios.get(`${API_HOST}/v1/sessions/${sessionId}/files`, {
+      headers,
+      params: cleanParams({ offset, limit, includeDeleted })
+    });
+    return res.data;
+  },
+
+  get_doc_comments: async (args, headers) => {
+    const { sessionId, docId, offset, limit } = args;
+    const res = await axios.get(
+      `${API_HOST}/v2/sessions/${sessionId}/files/${docId}/markups/details`,
+      {
+        headers,
+        params: cleanParams({ offset, limit })
+      }
+    );
+    return res.data;
+  },
+
+  get_doc_comment_statuses: async (args, headers) => {
+    const { sessionId, docId } = args;
+    const res = await axios.get(
+      `${API_HOST}/v2/sessions/${sessionId}/files/${docId}/statuses`,
+      { headers }
+    );
+    return res.data;
+  }
+};
+
+/**
+ * Registers the ListTools and CallTool request handlers on a given
+ * Model Context Protocol Server instance. This is the single entry
+ * point the transport layer uses to wire tools into a server.
+ */
+function registerHandlers(server) {
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: TOOL_DEFINITIONS
+  }));
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const toolName = request.params.name;
+    const args = request.params.arguments || {};
+    const handler = TOOL_HANDLERS[toolName];
+
+    if (!handler) {
+      return {
+        content: [{ type: 'text', text: `Unknown tool: ${toolName}` }],
+        isError: true
+      };
+    }
+
+    try {
+      const token = await getValidToken();
+      const headers = { Authorization: `Bearer ${token}` };
+      const data = await handler(args, headers);
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] };
+    } catch (e) {
+      const errorMessage = formatAxiosError(e);
+      console.error('[Bluebeam MCP] Tool call failed:', errorMessage);
+      return {
+        content: [{ type: 'text', text: errorMessage }],
+        isError: true
+      };
+    }
+  });
+}
+
+module.exports = { registerHandlers };
+   #+end_src
+
+** DONE Define the Model Context Protocol Tools for Bluebeam Inside index.js
+NOT USED
 Add the tool definitions to `index.js`. The Model Context Protocol Software Development Kit requires schema objects (not string literals) when registering handlers:
 #+BEGIN_SRC javascript
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: "get_sessions",
-      description: "List available Bluebeam Studio sessions",
-      inputSchema: { type: "object", properties: {} }
+      description: "List all Bluebeam Studio sessions the authenticated user owns or is attending",
+      inputSchema: {
+        type: "object",
+        properties: {
+          orderby: { type: "string", description: "Field to order results by" },
+          offset: { type: "integer", description: "Number of records to skip for pagination" },
+          limit: { type: "integer", description: "Maximum number of records to return" },
+          includeDeleted: { type: "boolean", description: "Whether to include deleted sessions" },
+          ownedOrAttending: { type: "string", description: "Filter by ownership: 'Owned', 'Attending', or both" }
+        }
+      }
     },
     {
       name: "get_session_docs",
-      description: "List documents within a specified Bluebeam session",
+      description: "List documents (files) within a specified Bluebeam Studio session",
       inputSchema: {
         type: "object",
-        properties: { sessionId: { type: "string" } },
+        properties: {
+          sessionId: { type: "string", description: "The Studio session ID" },
+          offset: { type: "integer", description: "Number of records to skip for pagination" },
+          limit: { type: "integer", description: "Maximum number of records to return" },
+          includeDeleted: { type: "boolean", description: "Whether to include deleted files" }
+        },
         required: ["sessionId"]
       }
     },
     {
       name: "get_doc_comments",
-      description: "Extract markups (comments) from a specific document in a session",
+      description: "Return a detailed list of markups (comments) on a specific session document",
       inputSchema: {
         type: "object",
         properties: {
-          sessionId: { type: "string" },
-          docId: { type: "string" }
+          sessionId: { type: "string", description: "The Studio session ID" },
+          docId: { type: "string", description: "The file (document) ID within the session" },
+          offset: { type: "integer", description: "Number of records to skip for pagination" },
+          limit: { type: "integer", description: "Maximum number of records to return" }
+        },
+        required: ["sessionId", "docId"]
+      }
+    },
+    {
+      name: "get_doc_comment_statuses",
+      description: "Return the list of valid statuses for markups on a session document",
+      inputSchema: {
+        type: "object",
+        properties: {
+          sessionId: { type: "string", description: "The Studio session ID" },
+          docId: { type: "string", description: "The file (document) ID within the session" }
         },
         required: ["sessionId", "docId"]
       }
@@ -487,36 +860,83 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const token = await getValidToken();
   const headers = { Authorization: `Bearer ${token}` };
-  const baseUrl = 'https://studioapi.bluebeam.com/publicapi/v1';
+  const apiHost = 'https://api.bluebeam.com/publicapi';
+
+  // Helper to drop undefined/null values so axios doesn't send empty query params
+  const cleanParams = (obj = {}) =>
+    Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null));
 
   try {
+    const args = request.params.arguments || {};
+
     if (request.params.name === "get_sessions") {
-      const res = await axios.get(`${baseUrl}/sessions`, { headers });
+      const { orderby, offset, limit, includeDeleted, ownedOrAttending } = args;
+      const res = await axios.get(`${apiHost}/v1/sessions`, {
+        headers,
+        params: cleanParams({ orderby, offset, limit, includeDeleted, ownedOrAttending })
+      });
       return { content: [{ type: "text", text: JSON.stringify(res.data) }] };
     }
+
     if (request.params.name === "get_session_docs") {
-      const { sessionId } = request.params.arguments;
-      const res = await axios.get(`$${baseUrl}/sessions/$${sessionId}/files`, { headers });
+      const { sessionId, offset, limit, includeDeleted } = args;
+      const res = await axios.get(`${apiHost}/v1/sessions/${sessionId}/files`, {
+        headers,
+        params: cleanParams({ offset, limit, includeDeleted })
+      });
       return { content: [{ type: "text", text: JSON.stringify(res.data) }] };
     }
+
     if (request.params.name === "get_doc_comments") {
-      const { sessionId, docId } = request.params.arguments;
+      const { sessionId, docId, offset, limit } = args;
       const res = await axios.get(
-        `$${baseUrl}/sessions/$${sessionId}/files/${docId}/markups`,
+        `${apiHost}/v2/sessions/${sessionId}/files/${docId}/markups/details`,
+        {
+          headers,
+          params: cleanParams({ offset, limit })
+        }
+      );
+      return { content: [{ type: "text", text: JSON.stringify(res.data) }] };
+    }
+
+    if (request.params.name === "get_doc_comment_statuses") {
+      const { sessionId, docId } = args;
+      const res = await axios.get(
+        `${apiHost}/v2/sessions/${sessionId}/files/${docId}/statuses`,
         { headers }
       );
       return { content: [{ type: "text", text: JSON.stringify(res.data) }] };
     }
+
     throw new Error(`Unknown tool: ${request.params.name}`);
   } catch (e) {
+    // Build a detailed error message for debugging
+    let errorMessage = `Error: ${e.message}`;
+
+    if (e.response) {
+      errorMessage += `\nStatus: ${e.response.status} ${e.response.statusText || ''}`.trim();
+      errorMessage += `\nURL: ${e.config?.method?.toUpperCase()} ${e.config?.url}`;
+      if (e.response.data) {
+        const body = typeof e.response.data === 'string'
+          ? e.response.data
+          : JSON.stringify(e.response.data, null, 2);
+        errorMessage += `\nResponse body: ${body}`;
+      }
+    } else if (e.request) {
+      errorMessage += `\nNo response received from ${e.config?.url}`;
+    }
+
+    console.error('[Bluebeam MCP] Tool call failed:', errorMessage);
+
     return {
-      content: [{ type: "text", text: `Error: ${e.message}` }],
+      content: [{ type: "text", text: errorMessage }],
       isError: true
     };
   }
 });
 
 app.listen(3000, () => console.log('Model Context Protocol Server running on port 3000'));
+
 #+END_SRC
 
 * TODO Phase 4: Local and End-to-End Testing (Laptop)
@@ -546,7 +966,7 @@ Ngrok will display a forwarding Uniform Resource Locator such as `https://abc123
 1. Log into Claude at https://claude.ai.
 2. Navigate to Settings, then Connectors, then Add Custom Connector.
 3. Provide a name such as `Bluebeam Dev`.
-4. For the Server-Sent Events endpoint, enter your Ngrok Uniform Resource Locator followed by `/mcp/sse` (for example, `https://abc123.ngrok-free.app/mcp/sse`).
+4. For the Server-Sent Events endpoint, enter your Ngrok Uniform Resource Locator followed by `/mcp/sse` (for example, `https://abc123.ngrok-free.app/mcp/sse`). *Note that the change to streamable http connect to /mcp (without the sse)*
 5. Save the connector. Claude will attempt a handshake; you should see activity in both the Ngrok terminal and your server terminal.
 
 ** TODO Test Each Tool from Within a Claude Conversation
@@ -646,10 +1066,8 @@ Either reserve the Pi's address in your router's Dynamic Host Configuration Prot
 
 ** TODO Set Up Port Forwarding on the Network Router
 In your router's administrative interface, forward external Transmission Control Protocol port 443 to the Pi's internal Internet Protocol address on port 443. You may need to coordinate with your network administrator (LBL may have restrictions on inbound connections).
-
 ** TODO Obtain a Public Domain Name
 You will need a domain name for the Hypertext Transfer Protocol Secure certificate. Options include purchasing one through a registrar such as Namecheap or using a free Dynamic Domain Name System service such as DuckDNS. Point an A record at your network's public Internet Protocol address.
-
 ** TODO Install Nginx and Certbot on the Pi
 Nginx will serve as a reverse proxy that terminates Hypertext Transfer Protocol Secure connections and forwards plain Hypertext Transfer Protocol traffic to the Node.js server. Certbot from Let's Encrypt provides free Transport Layer Security certificates.
 #+BEGIN_SRC bash
@@ -658,7 +1076,8 @@ sudo apt install -y nginx certbot python3-certbot-nginx
 
 ** TODO Create an Nginx Site Configuration for the Model Context Protocol Server
 Create `/etc/nginx/sites-available/bluebeam-mcp`:
-#+BEGIN_SRC nginx
+
++BEGIN_SRC nginx
 server {
     listen 80;
     server_name your-domain.example.com;
@@ -672,19 +1091,21 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
 
         # Critical settings for Server-Sent Events
-        proxy_set_header Connection '';
-        proxy_buffering off;
+        proxy_set_header Connection "";
+        # Ensure proxy buffering is off because streamable http uses streaming responses for teh get side
+	proxy_buffering off; 
         proxy_cache off;
         proxy_read_timeout 24h;
     }
 }
-#+END_SRC
++END_SRC
 Enable the site and reload Nginx:
 #+BEGIN_SRC bash
 sudo ln -s /etc/nginx/sites-available/bluebeam-mcp /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 #+END_SRC
+
 
 ** TODO Obtain a Hypertext Transfer Protocol Secure Certificate with Certbot
 #+BEGIN_SRC bash
@@ -701,7 +1122,7 @@ curl https://your-domain.example.com/mcp/sse
 * TODO Phase 8: Switch the Claude Custom Connector to Production
 ** TODO Update the Claude Custom Connector Uniform Resource Locator
 In Claude's Connectors settings, edit the Bluebeam connector and replace the Ngrok Uniform Resource Locator with `https://your-domain.example.com/mcp/sse`.
-
+note that with the change to streaming http only go to /mcp (without the sse)
 ** TODO Conduct Final End-to-End Tests with the Shared Account
 Run through each tool again (list sessions, list documents, extract markups) and confirm everything works against the production deployment.
 
@@ -794,7 +1215,7 @@ sudo apt install -y docker-compose-plugin
 
 *** TODO Create a Dockerfile in the Project Root
 On your laptop, in the project directory, create a file named `Dockerfile` (no file extension) with the following contents:
-#+BEGIN_SRC dockerfile
++BEGIN_SRC dockerfile
 FROM node:20-alpine
 
 WORKDIR /app
@@ -809,7 +1230,8 @@ COPY . .
 EXPOSE 3000
 
 CMD ["node", "index.js"]
-#+END_SRC
++END_SRC
+
 The `node:20-alpine` base image is small (roughly fifty megabytes) and supports the ARM architecture used by the Raspberry Pi. The two-step copy pattern means that if you change only application code without modifying dependencies, Docker reuses the cached dependency layer and rebuilds quickly.
 
 *** TODO Create a Dockerignore File
@@ -927,7 +1349,7 @@ The day-to-day commands change with the move to Docker. Update your README.md to
 
 *** TODO Set Up a Log Rotation Strategy
 By default, Docker accumulates container logs indefinitely, which will eventually fill the MicroSD card. Configure Docker's built-in log rotation by creating or editing `/etc/docker/daemon.json`:
-#+BEGIN_SRC json
++BEGIN_SRC json
 {
   "log-driver": "json-file",
   "log-opts": {
@@ -935,7 +1357,7 @@ By default, Docker accumulates container logs indefinitely, which will eventuall
     "max-file": "3"
   }
 }
-#+END_SRC
++END_SRC
 Then restart the Docker daemon for the change to take effect:
 #+BEGIN_SRC bash
 sudo systemctl restart docker
@@ -963,7 +1385,7 @@ Docker will ask for confirmation and list what it will remove. Be cautious: this
 **** TODO Phase 12: Optional Docker Enhancements
 ***** TODO Use a Multi-Stage Build to Further Shrink the Image
 A multi-stage Dockerfile separates the build environment (which may include compilers and development tools) from the runtime image. For a pure JavaScript application like this one, the savings are modest but the pattern is worth knowing:
-#+BEGIN_SRC dockerfile
++BEGIN_SRC dockerfile
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -975,14 +1397,14 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY . .
 EXPOSE 3000
 CMD ["node", "index.js"]
-#+END_SRC
++END_SRC
 
 ***** TODO Run the Container as a Non-Root User
 By default, processes inside the container run as root, which is a minor security concern even though the container is isolated from the host. Add these lines before the `CMD` instruction in your Dockerfile:
-#+BEGIN_SRC dockerfile
++BEGIN_SRC dockerfile
 RUN addgroup -S app && adduser -S app -G app
 USER app
-#+END_SRC
++END_SRC
 You may need to adjust file permissions on the mounted `tokens.json` file so the non-root user can write to it.
 
 ***** TODO Set Up Automated Image Builds Using GitHub Actions
@@ -1079,6 +1501,11 @@ These values cap the container at half a central processing unit core and two hu
 
 ***** TODO Consider Migrating to a More Powerful Host
 Once containerized, the application is portable to any system that runs Docker. If the Raspberry Pi proves underpowered or unreliable, you can move the deployment to a small cloud virtual machine (such as a five-dollar-per-month instance from a provider like DigitalOcean, Linode, or Hetzner) with minimal effort: install Docker on the new host, copy `.env` and `tokens.json` over via Secure Copy Protocol, run `docker compose up -d`, and repoint your domain name. This portability is arguably the single greatest practical benefit of having containerized the application.
+
+
+
+
+
 
 
 
