@@ -6,7 +6,7 @@ const {
 
 const { getValidToken } = require('./auth-manager');
 
-const API_HOST = 'https://api.bluebeam.com/publicapi';
+const API_HOST = 'https://studioapi.bluebeam.com/publicapi';
 
 /**
  * Removes undefined and null values from a parameters object so that
@@ -16,6 +16,17 @@ const cleanParams = (obj = {}) =>
   Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
   );
+
+/**
+ * Logs an outbound Bluebeam API request in a consistent format so we can
+ * see exactly what URL, params, and (sanitized) headers were sent. Used by
+ * every tool handler immediately before its axios call.
+ */
+const logOutbound = (method, url, params) => {
+  console.log(
+    `[bluebeam] ${method} ${url} params: ${JSON.stringify(params || {})}`
+  );
+};
 
 /**
  * Builds a detailed, log-friendly error message from an axios error,
@@ -28,6 +39,9 @@ const formatAxiosError = (e) => {
   if (e.response) {
     errorMessage += `\nStatus: ${e.response.status} ${e.response.statusText || ''}`.trim();
     errorMessage += `\nURL: ${e.config?.method?.toUpperCase()} ${e.config?.url}`;
+    if (e.config?.params) {
+      errorMessage += `\nRequest params: ${JSON.stringify(e.config.params)}`;
+    }
     if (e.response.data) {
       const body = typeof e.response.data === 'string'
         ? e.response.data
@@ -58,7 +72,8 @@ const TOOL_DEFINITIONS = [
         includeDeleted: { type: 'boolean', description: 'Whether to include deleted sessions' },
         ownedOrAttending: {
           type: 'string',
-          description: "Filter by ownership: 'Owned', 'Attending', or both"
+          enum: ['owned', 'Attending'],
+          description: "Filter by ownership. Must be exactly 'Owned' or 'Attending' (case-sensitive). Omit to return both."
         }
       }
     }
@@ -113,40 +128,36 @@ const TOOL_DEFINITIONS = [
 const TOOL_HANDLERS = {
   get_sessions: async (args, headers) => {
     const { orderby, offset, limit, includeDeleted, ownedOrAttending } = args;
-    const res = await axios.get(`${API_HOST}/v1/sessions`, {
-      headers,
-      params: cleanParams({ orderby, offset, limit, includeDeleted, ownedOrAttending })
-    });
+    const url = `${API_HOST}/v1/sessions`;
+    const params = cleanParams({ orderby, offset, limit, includeDeleted, ownedOrAttending });
+    logOutbound('GET', url, params);
+    const res = await axios.get(url, { headers, params });
     return res.data;
   },
 
   get_session_docs: async (args, headers) => {
     const { sessionId, offset, limit, includeDeleted } = args;
-    const res = await axios.get(`${API_HOST}/v1/sessions/${sessionId}/files`, {
-      headers,
-      params: cleanParams({ offset, limit, includeDeleted })
-    });
+    const url = `${API_HOST}/v1/sessions/${sessionId}/files`;
+    const params = cleanParams({ offset, limit, includeDeleted });
+    logOutbound('GET', url, params);
+    const res = await axios.get(url, { headers, params });
     return res.data;
   },
 
   get_doc_comments: async (args, headers) => {
     const { sessionId, docId, offset, limit } = args;
-    const res = await axios.get(
-      `${API_HOST}/v2/sessions/${sessionId}/files/${docId}/markups/details`,
-      {
-        headers,
-        params: cleanParams({ offset, limit })
-      }
-    );
+    const url = `${API_HOST}/v2/sessions/${sessionId}/files/${docId}/markups/details`;
+    const params = cleanParams({ offset, limit });
+    logOutbound('GET', url, params);
+    const res = await axios.get(url, { headers, params });
     return res.data;
   },
 
   get_doc_comment_statuses: async (args, headers) => {
     const { sessionId, docId } = args;
-    const res = await axios.get(
-      `${API_HOST}/v2/sessions/${sessionId}/files/${docId}/statuses`,
-      { headers }
-    );
+    const url = `${API_HOST}/v2/sessions/${sessionId}/files/${docId}/statuses`;
+    logOutbound('GET', url, {});
+    const res = await axios.get(url, { headers });
     return res.data;
   }
 };
@@ -164,6 +175,8 @@ function registerHandlers(server) {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const toolName = request.params.name;
     const args = request.params.arguments || {};
+    console.log(`[tool] ${toolName} args: ${JSON.stringify(args)}`);
+
     const handler = TOOL_HANDLERS[toolName];
 
     if (!handler) {
@@ -188,3 +201,5 @@ function registerHandlers(server) {
     }
   });
 }
+
+module.exports = { registerHandlers };
