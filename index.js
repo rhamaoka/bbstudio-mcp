@@ -1,3 +1,6 @@
+// ---------- load env vars FIRST, before any other require ----------
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 // ---------- exit diagnostics ----------
 process.on('SIGINT', () => {
   console.log('[signal] SIGINT received');

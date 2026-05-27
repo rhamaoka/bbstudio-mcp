@@ -6,7 +6,13 @@ const {
 
 const { getValidToken } = require('./auth-manager');
 
-const API_HOST = 'https://studioapi.bluebeam.com/publicapi';
+//const API_HOST = 'https://studioapi.bluebeam.com/publicapi';
+const API_HOST= 'https://api.bluebeam.com/publicapi'
+const CLIENT_ID= process.env.BLUEBEAM_CLIENT_ID;
+
+if (!CLIENT_ID) {
+  throw new Error('BLUEBEAM_CLIENT_ID environment variable is required');
+}
 
 /**
  * Removes undefined and null values from a parameters object so that
@@ -188,7 +194,9 @@ function registerHandlers(server) {
 
     try {
       const token = await getValidToken();
-      const headers = { Authorization: `Bearer ${token}` };
+      const headers = { Authorization: `Bearer ${token}`,
+			client_id: CLIENT_ID
+		      };
       const data = await handler(args, headers);
       return { content: [{ type: 'text', text: JSON.stringify(data) }] };
     } catch (e) {

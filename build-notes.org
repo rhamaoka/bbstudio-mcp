@@ -964,10 +964,13 @@ In a new terminal (leave the server running in the original one):
 #+BEGIN_SRC bash
 ngrok http 3000
 ngrok http 3000 --request-header-add "Host: localhost:3000"
+ngrok http 3000 --host-header=localhost:3000  ## New ngrok syntax to rewrite the host header so the local server sees localhost:3000
+
 #+END_SRC
 Ngrok will display a forwarding Uniform Resource Locator such as `https://abc123.ngrok-free.app`. Copy this Uniform Resource Locator.
 
  https://provider-calorie-ellipse.ngrok-free.dev -> http://localhost:3000 
+ https://provider-calorie-ellipse.ngrok-free.dev
 
 ** TODO Create a Claude Custom Connector Using the Ngrok Uniform Resource Locator
 1. Log into Claude at https://claude.ai.
@@ -991,17 +994,25 @@ curl -v -X POST http://localhost:3000/mcp \
   -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"curl-test","version":"0.0.1"}}}'
 
-
 step 2: in another terminal
 pkill ngrok
 pgrep ngrok
-ngrok http 3000 --request-header-add "Host: localhost:3000"
-
+ngrok http 3000 --request-header-add "Host: localhost:3000" ## depreciated
+ngrok http 3000 --host-header=localhost:3000
 
 
 
 step 3: web inspector
 http://127.0.0.1:4040
+
+
+curl -i -X GET "https://api.bluebeam.com/publicapi/v2/users/me" \
+  -H "Authorization: Bearer $(jq -r .access_token tokens.json)"
+
+curl -i -X GET "https://studioapi.bluebeam.com/publicapi/v1/users/me" \
+  -H "Authorization: Bearer $(jq -r .access_token tokens.json)"
+
+
 
 
 
