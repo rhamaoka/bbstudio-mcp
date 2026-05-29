@@ -43,7 +43,7 @@
   - [[#commit-the-working-code-to-a-remote-git-repository][Commit the Working Code to a Remote Git Repository]]
 - [[#phase-5-raspberry-pi-preparation][Phase 5: Raspberry Pi Preparation]]
   - [[#flash-the-raspberry-pi-operating-system-onto-the-microsd-card][Flash the Raspberry Pi Operating System Onto the MicroSD Card]]
-  - [[#boot-the-raspberry-pi-and-connect-via-secure-shell][Boot the Raspberry Pi and Connect via Secure Shell]]
+  - [[#boot-the-raspberry-pi-and-connct-via-secure-shell][Boot the Raspberry Pi and Connct via Secure Shell]]
   - [[#update-the-system-and-install-nodejs-and-git-on-the-raspberry-pi][Update the System and Install Node.js and Git on the Raspberry Pi]]
   - [[#install-process-manager-2-globally-for-persistent-process-management][Install Process Manager 2 Globally for Persistent Process Management]]
 - [[#phase-6-deploy-the-application-to-the-raspberry-pi][Phase 6: Deploy the Application to the Raspberry Pi]]
@@ -940,7 +940,7 @@ app.listen(3000, () => console.log('Model Context Protocol Server running on por
 
 #+END_SRC
 
-* TODO Phase 4: Local and End-to-End Testing (Laptop)
+* DONE Phase 4: Local and End-to-End Testing (Laptop)
 ** DONE Run the Server Locally and Confirm It Starts Without Errors
 #+BEGIN_SRC bash
 cd ~/projects/mcp-bbstudio
@@ -1013,7 +1013,7 @@ Start a new Claude conversation with the connector enabled and try prompts such 
 
 Verify that the responses contain real data from Bluebeam. If errors occur, check the server terminal for stack traces and the Ngrok inspection interface at http://localhost:4040 to view request and response payloads.
 
-** TODO Commit the Working Code to a Remote Git Repository
+** DONE Commit the Working Code to a Remote Git Repository
 Create a `.gitignore` file first to avoid committing secrets:
 #+BEGIN_SRC text
 node_modules/
@@ -1029,14 +1029,14 @@ git push -u origin main
 #+END_SRC
 
 * TODO Phase 5: Raspberry Pi Preparation
-** TODO Flash the Raspberry Pi Operating System Onto the MicroSD Card
+** DONE Flash the Raspberry Pi Operating System Onto the MicroSD Card
 1. Download the Raspberry Pi Imager from https://www.raspberrypi.com/software/.
 2. Insert the MicroSD card into your laptop.
 3. Open the Imager and select Raspberry Pi Operating System Lite (64-bit) — the Lite version omits the desktop environment, which is unnecessary for a server.
 4. Before writing, click the gear icon to preconfigure: enable Secure Shell, set a username and password, and configure Wi-Fi credentials if applicable.
 5. Write the image to the card.
 
-** TODO Boot the Raspberry Pi and Connect via Secure Shell
+** DONE Boot the Raspberry Pi and Connct via Secure Shell
 1. Insert the MicroSD card into the Pi, connect Ethernet (or rely on the preconfigured Wi-Fi), and power on.
 2. Find the Pi's Internet Protocol address from your router's administrative interface or by running `ping raspberrypi.local` from your laptop.
 3. Connect via Secure Shell:
