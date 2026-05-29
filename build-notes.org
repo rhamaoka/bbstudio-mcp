@@ -38,6 +38,7 @@
   - [[#install-ngrok-to-expose-the-local-server-to-the-public-internet][Install Ngrok to Expose the Local Server to the Public Internet]]
   - [[#start-an-ngrok-tunnel-to-port-3000][Start an Ngrok Tunnel to Port 3000]]
   - [[#create-a-claude-custom-connector-using-the-ngrok-uniform-resource-locator][Create a Claude Custom Connector Using the Ngrok Uniform Resource Locator]]
+  - [[#testing-stack-summary][Testing Stack Summary]]
   - [[#test-each-tool-from-within-a-claude-conversation][Test Each Tool from Within a Claude Conversation]]
   - [[#commit-the-working-code-to-a-remote-git-repository][Commit the Working Code to a Remote Git Repository]]
 - [[#phase-5-raspberry-pi-preparation][Phase 5: Raspberry Pi Preparation]]
@@ -958,8 +959,7 @@ Ngrok creates a temporary public Uniform Resource Locator that forwards to your 
 #+BEGIN_SRC bash
 ngrok config add-authtoken YOUR_NGROK_TOKEN
 #+END_SRC
-
-** TODO Start an Ngrok Tunnel to Port 3000
+** DONE Start an Ngrok Tunnel to Port 3000
 In a new terminal (leave the server running in the original one):
 #+BEGIN_SRC bash
 ngrok http 3000
@@ -972,7 +972,7 @@ Ngrok will display a forwarding Uniform Resource Locator such as `https://abc123
  https://provider-calorie-ellipse.ngrok-free.dev -> http://localhost:3000 
  https://provider-calorie-ellipse.ngrok-free.dev
 
-** TODO Create a Claude Custom Connector Using the Ngrok Uniform Resource Locator
+** DONE Create a Claude Custom Connector Using the Ngrok Uniform Resource Locator
 1. Log into Claude at https://claude.ai.
 2. Navigate to Settings, then Connectors, then Add Custom Connector.
 3. Provide a name such as `Bluebeam Dev`.
@@ -981,42 +981,31 @@ Ngrok will display a forwarding Uniform Resource Locator such as `https://abc123
 
 Note that for the free tier, the ngrok uri will change after every restart
 
-
-step 1:
-cd ~/projects/mcp-bbstudio
-ss -ltnp | grep :3000
-pkill -f "node index.js"
-node index.js
-
-step 2: in another termial
-curl -v -X POST http://localhost:3000/mcp \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"curl-test","version":"0.0.1"}}}'
-
-step 2: in another terminal
-pkill ngrok
-pgrep ngrok
-ngrok http 3000 --request-header-add "Host: localhost:3000" ## depreciated
-ngrok http 3000 --host-header=localhost:3000
-
-
-
 step 3: web inspector
 http://127.0.0.1:4040
-
-
-curl -i -X GET "https://api.bluebeam.com/publicapi/v2/users/me" \
-  -H "Authorization: Bearer $(jq -r .access_token tokens.json)"
 
 curl -i -X GET "https://studioapi.bluebeam.com/publicapi/v1/users/me" \
   -H "Authorization: Bearer $(jq -r .access_token tokens.json)"
 
+** DONE Testing Stack Summary
+- start the mcp server locally
+cd ~/projects/bbstudio-mcp
+- Sometimes you may need to kill any existing mcp server than didn't shut down properly
+ss -ltnp | grep :3000
+pkill -f "node index.js"
+node index.js
 
+- In another termial, start the ngrok public host. May need to check if the ngrok endpoint has changed.
+If it has, need to update the new URL with the /mcp suffix
+ https://abc123.ngrok-free.app/mcp
+- Sometimes you may need to shut down any existing ngrok public URL (secure public URL) to the locally hosted mcp server
+pkill ngrok
+pgrep ngrok
+ngrok http 3000 --host-header=localhost:3000
+- Check the claude connector to make sure it has the ngrok URL.
+- Run tool tests in claude
 
-
-
-** TODO Test Each Tool from Within a Claude Conversation
+** DONE Test Each Tool from Within a Claude Conversation
 Start a new Claude conversation with the connector enabled and try prompts such as:
 - "List my Bluebeam Studio sessions."
 - "Show me the documents in session [ID from previous response]."
