@@ -43,7 +43,7 @@
   - [[#commit-the-working-code-to-a-remote-git-repository][Commit the Working Code to a Remote Git Repository]]
 - [[#phase-5-raspberry-pi-preparation][Phase 5: Raspberry Pi Preparation]]
   - [[#flash-the-raspberry-pi-operating-system-onto-the-microsd-card][Flash the Raspberry Pi Operating System Onto the MicroSD Card]]
-  - [[#boot-the-raspberry-pi-and-connct-via-secure-shell][Boot the Raspberry Pi and Connct via Secure Shell]]
+  - [[#boot-the-raspberry-pi-and-connect-via-secure-shell][Boot the Raspberry Pi and Connect via Secure Shell]]
   - [[#update-the-system-and-install-nodejs-and-git-on-the-raspberry-pi][Update the System and Install Node.js and Git on the Raspberry Pi]]
   - [[#install-process-manager-2-globally-for-persistent-process-management][Install Process Manager 2 Globally for Persistent Process Management]]
 - [[#phase-6-deploy-the-application-to-the-raspberry-pi][Phase 6: Deploy the Application to the Raspberry Pi]]
@@ -1036,7 +1036,7 @@ git push -u origin main
 4. Before writing, click the gear icon to preconfigure: enable Secure Shell, set a username and password, and configure Wi-Fi credentials if applicable.
 5. Write the image to the card.
 
-** DONE Boot the Raspberry Pi and Connct via Secure Shell
+** DONE Boot the Raspberry Pi and Connect via Secure Shell
 1. Insert the MicroSD card into the Pi, connect Ethernet (or rely on the preconfigured Wi-Fi), and power on.
 2. Find the Pi's Internet Protocol address from your router's administrative interface or by running `ping raspberrypi.local` from your laptop.
 3. Connect via Secure Shell:
